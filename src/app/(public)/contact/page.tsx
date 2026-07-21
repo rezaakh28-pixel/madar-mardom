@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { Mail, MapPin, Send } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { ContactForm } from "@/components/contact/contact-form";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -35,24 +32,7 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="name">نام</Label>
-          <Input id="name" name="name" required />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">ایمیل</Label>
-          <Input id="email" name="email" type="email" dir="ltr" required />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="message">پیام</Label>
-          <Textarea id="message" name="message" rows={6} required />
-        </div>
-        <Button type="submit" className="gap-1.5 self-start">
-          <Send className="h-4 w-4" />
-          ارسال پیام
-        </Button>
-      </form>
+      <ContactForm />
     </div>
   );
 }
