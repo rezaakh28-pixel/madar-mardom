@@ -1,0 +1,185 @@
+// مدار مردم — Prisma schema
+// Run `npx prisma db push` (or migrate dev) once DATABASE_URL is set.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  REPORTER
+  EDITOR
+  ADMIN
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum ArticleKind {
+  NEWS
+  ANALYSIS
+  NOTE
+  REPORT
+  DATA
+  VIDEO
+  PODCAST
+  INFOGRAPHIC
+}
+
+enum VoiceSubmissionKind {
+  NEWS_TIP
+  PHOTO
+  VIDEO
+  REPORT
+}
+
+enum VoiceSubmissionStatus {
+  SUBMITTED
+  IN_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String
+  name          String
+  title         String?
+  bio           String?
+  avatarUrl     String?
+  role          UserRole  @default(REPORTER)
+  isActive      Boolean   @default(true)
+  twitter       String?
+  telegram      String?
+  instagram     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  articles      Article[] @relation("ArticleAuthor")
+  reviewedByLogs ArticleRevision[] @relation("RevisionEditor")
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  description String?
+  articles    Article[]
+
+  @@map("categories")
+}
+
+model Article {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  kind           ArticleKind   @default(NEWS)
+  status         ArticleStatus @default(DRAFT)
+
+  title          String
+  deck           String?
+  lead           String
+  body           String        @db.Text
+
+  coverImageUrl  String?
+  coverImageAlt  String?
+  galleryJson    Json?
+  videoUrl       String?
+  audioUrl       String?
+
+  tags           String[]      @default([])
+
+  authorId       String
+  author         User          @relation("ArticleAuthor", fields: [authorId], references: [id])
+
+  categoryId     String
+  category       Category      @relation(fields: [categoryId], references: [id])
+
+  specialCaseId  String?
+  specialCase    SpecialCase?  @relation(fields: [specialCaseId], references: [id])
+
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]      @default([])
+
+  viewCount      Int           @default(0)
+  isFeatured     Boolean       @default(false)
+
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  revisions      ArticleRevision[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@map("articles")
+}
+
+/// Version history so editors can restore a previous draft/version.
+model ArticleRevision {
+  id         String   @id @default(cuid())
+  articleId  String
+  article    Article  @relation(fields: [articleId], references: [id])
+  snapshot   Json      // full article field snapshot at time of revision
+  note       String?
+  editorId   String?
+  editor     User?    @relation("RevisionEditor", fields: [editorId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@map("article_revisions")
+}
+
+model SpecialCase {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  summary     String
+  coverImageUrl String?
+  startedAt   DateTime  @default(now())
+  articles    Article[]
+
+  @@map("special_cases")
+}
+
+model VoiceSubmission {
+  id            String                @id @default(cuid())
+  trackingCode  String                @unique
+  kind          VoiceSubmissionKind
+  title         String
+  description   String
+  categorySlug  String
+  location      String?
+  contactEmail  String?
+  fileUrls      String[]              @default([])
+  status        VoiceSubmissionStatus @default(SUBMITTED)
+  statusNote    String?
+  submittedAt   DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@map("voice_submissions")
+}
+
+model PulseSnapshot {
+  id            String   @id @default(cuid())
+  metric        String   // usd | gold | coin | stock | inflation | subsidy | gasoline | housing | weather | pollution
+  value         Float
+  unit          String?
+  recordedAt    DateTime @default(now())
+
+  @@index([metric, recordedAt])
+  @@map("pulse_snapshots")
+}
