@@ -113,7 +113,7 @@ const config: Config = {
           to: { height: "0" },
         },
         // Signature motif for "نبض جامعه" (Pulse of Society): a slow ECG-style sweep.
-        pulse-sweep: {
+        "pulse-sweep": {
           "0%": { strokeDashoffset: "1000" },
           "100%": { strokeDashoffset: "0" },
         },
