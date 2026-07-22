@@ -4,10 +4,11 @@ import { LogOut } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { Button } from "@/components/ui/button";
 import { getSession, ROLE_LABELS_FA } from "@/lib/auth";
+import { logoutAction } from "@/app/login/actions";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
-  if (!session) redirect("/");
+  if (!session) redirect("/login");
 
   return (
     <div className="flex min-h-dvh flex-col bg-muted/30">
@@ -19,9 +20,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <span className="text-xs text-muted-foreground">
             {session.user.name} · {ROLE_LABELS_FA[session.user.role]}
           </span>
-          <Button variant="ghost" size="icon" aria-label="خروج">
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <form action={logoutAction}>
+            <Button type="submit" variant="ghost" size="icon" aria-label="خروج">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </form>
         </div>
       </header>
 

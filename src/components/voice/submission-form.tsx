@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUpload } from "@/components/shared/file-upload";
 import { CATEGORIES } from "@/lib/mock-data";
 import type { VoiceSubmissionKind } from "@/types";
-import { ShieldCheck, UploadCloud } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 const KIND_OPTIONS: Array<{ value: VoiceSubmissionKind; label: string }> = [
   { value: "NEWS_TIP", label: "خبر" },
@@ -20,6 +21,7 @@ const KIND_OPTIONS: Array<{ value: VoiceSubmissionKind; label: string }> = [
 export function SubmissionForm() {
   const [kind, setKind] = React.useState<VoiceSubmissionKind>("NEWS_TIP");
   const [category, setCategory] = React.useState<string>("society");
+  const [fileUrls, setFileUrls] = React.useState<string[]>([]);
   const [captchaChecked, setCaptchaChecked] = React.useState(false);
   const [status, setStatus] = React.useState<"idle" | "submitting" | "success" | "error">("idle");
   const [trackingCode, setTrackingCode] = React.useState<string | null>(null);
@@ -47,6 +49,7 @@ export function SubmissionForm() {
           description: form.get("description"),
           category,
           location: form.get("location") || undefined,
+          fileUrls: fileUrls.length > 0 ? fileUrls : undefined,
           // Placeholder token — a real Turnstile/reCAPTCHA widget would supply this.
           captchaToken: "demo-captcha-token",
         }),
@@ -131,11 +134,13 @@ export function SubmissionForm() {
 
       <div className="flex flex-col gap-1.5">
         <Label>فایل ضمیمه (اختیاری)</Label>
-        <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-input p-6 text-center text-sm text-muted-foreground">
-          <UploadCloud className="h-6 w-6" />
-          <span>فایل را اینجا رها کنید یا برای انتخاب کلیک کنید</span>
-          <span className="text-xs">(اتصال به سرویس آپلود به‌زودی — این بخش صرفاً نمایشی است)</span>
-        </div>
+        <FileUpload
+          mode="multiple"
+          accept="image/*,video/*"
+          label="فایل را اینجا رها کنید یا برای انتخاب کلیک کنید"
+          hint="عکس یا ویدیو — حداکثر ۸ مگابایت"
+          onChange={setFileUrls}
+        />
       </div>
 
       {/* Captcha placeholder — replace with a real widget (e.g. Cloudflare Turnstile) before launch. */}

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, Search, User, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ const MORE_LINKS = [
   { href: "/data", label: "داده" },
   { href: "/video", label: "ویدیو" },
   { href: "/podcast", label: "پادکست" },
-  { href: "/infographic", label: "اینفوگرافیک" },
+  { href: "/infographic", label: "گزارش تصویری" },
 ];
 
 export function Navbar() {
@@ -52,8 +53,8 @@ export function Navbar() {
       <div className="container-page flex h-16 items-center justify-between gap-3">
         {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="مدار مردم — صفحه اصلی">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold">
-            م
+          <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md">
+            <Image src="/logo.jpg" alt="مدار مردم" fill sizes="36px" className="object-cover" priority />
           </span>
           <span className="hidden flex-col sm:flex">
             <span className="text-lg font-extrabold leading-tight text-primary">مدار مردم</span>
@@ -121,9 +122,11 @@ export function Navbar() {
 
           <ThemeToggle />
 
-          <Button variant="secondary" size="sm" className="hidden gap-1.5 sm:inline-flex">
-            <User className="h-4 w-4" />
-            ورود
+          <Button variant="secondary" size="sm" className="hidden gap-1.5 sm:inline-flex" asChild>
+            <Link href="/login">
+              <User className="h-4 w-4" />
+              ورود
+            </Link>
           </Button>
 
           <Button
@@ -158,9 +161,11 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Button variant="secondary" size="sm" className="mt-2 gap-1.5">
-              <User className="h-4 w-4" />
-              ورود
+            <Button variant="secondary" size="sm" className="mt-2 gap-1.5" asChild>
+              <Link href="/login">
+                <User className="h-4 w-4" />
+                ورود
+              </Link>
             </Button>
           </div>
         </div>

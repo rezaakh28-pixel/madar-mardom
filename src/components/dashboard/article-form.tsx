@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, ImagePlus, Save, Send, AlertTriangle } from "lucide-react";
+import { Sparkles, Save, Send, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUpload } from "@/components/shared/file-upload";
 import { CATEGORIES } from "@/lib/mock-data";
 import {
   suggestTitleAction,
@@ -24,6 +25,7 @@ export function ArticleForm() {
   const [body, setBody] = React.useState("");
   const [category, setCategory] = React.useState("society");
   const [tags, setTags] = React.useState<string[]>([]);
+  const [coverImageUrl, setCoverImageUrl] = React.useState("");
   const [duplicateWarning, setDuplicateWarning] = React.useState(false);
   const [aiBusy, setAiBusy] = React.useState<string | null>(null);
   const [saveState, setSaveState] = React.useState<"idle" | "saved" | "submitted">("idle");
@@ -50,7 +52,7 @@ export function ArticleForm() {
     runAi("duplicate", async () => setDuplicateWarning(await checkDuplicateAction(body || lead)));
 
   async function handleSave(action: "draft" | "submit") {
-    await saveArticleAction({ title, deck, lead, body, category, tags, action });
+    await saveArticleAction({ title, deck, lead, body, category, tags, coverImageUrl, action });
     setSaveState(action === "draft" ? "saved" : "submitted");
     setTimeout(() => setSaveState("idle"), 3000);
   }
@@ -144,10 +146,13 @@ export function ArticleForm() {
 
           <div className="flex flex-col gap-1.5">
             <Label>تصویر شاخص</Label>
-            <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-input p-6 text-center text-xs text-muted-foreground">
-              <ImagePlus className="h-6 w-6" />
-              آپلود تصویر (نمایشی)
-            </div>
+            <FileUpload
+              mode="single"
+              accept="image/*"
+              label="تصویر را اینجا رها کنید یا برای انتخاب کلیک کنید"
+              hint="حداکثر ۸ مگابایت"
+              onChange={(urls) => setCoverImageUrl(urls[0] ?? "")}
+            />
           </div>
         </div>
       </div>

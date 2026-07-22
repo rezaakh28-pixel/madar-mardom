@@ -13,7 +13,7 @@ const KIND_LABEL_FA: Record<NewsArticle["kind"], string> = {
   DATA: "داده",
   VIDEO: "ویدیو",
   PODCAST: "پادکست",
-  INFOGRAPHIC: "اینفوگرافیک",
+  INFOGRAPHIC: "گزارش تصویری",
 };
 
 export function ArticleCard({

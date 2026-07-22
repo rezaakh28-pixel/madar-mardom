@@ -9,6 +9,7 @@ const submissionSchema = z.object({
   description: z.string().min(20, "توضیحات باید حداقل ۲۰ نویسه باشد").max(4000),
   category: z.string(),
   location: z.string().optional(),
+  fileUrls: z.array(z.string().url()).max(6).optional(),
   // Placeholder captcha token — validate against a real provider (e.g. Cloudflare Turnstile) in production.
   captchaToken: z.string().min(1, "لطفاً کپچا را تکمیل کنید"),
 });
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
     description: parsed.data.description,
     category: parsed.data.category as never,
     location: parsed.data.location,
+    fileUrls: parsed.data.fileUrls,
   });
 
   logger.audit("voice_submission_created", "anonymous", { trackingCode: submission.trackingCode });

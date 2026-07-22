@@ -36,6 +36,7 @@ export interface SaveArticleInput {
   body: string;
   category: string;
   tags: string[];
+  coverImageUrl?: string;
   action: "draft" | "submit";
 }
 
@@ -44,6 +45,7 @@ export async function saveArticleAction(input: SaveArticleInput) {
   logger.audit("article_saved", "usr_demo_reporter", {
     status: input.action === "draft" ? "DRAFT" : "PENDING_REVIEW",
     title: input.title,
+    coverImageUrl: input.coverImageUrl,
   });
   // Simulate DB write latency.
   await new Promise((r) => setTimeout(r, 300));

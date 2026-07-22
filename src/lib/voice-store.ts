@@ -34,6 +34,7 @@ export interface CreateVoiceSubmissionInput {
   description: string;
   category: CategorySlug;
   location?: string;
+  fileUrls?: string[];
 }
 
 export function createVoiceSubmission(input: CreateVoiceSubmissionInput): VoiceSubmission {

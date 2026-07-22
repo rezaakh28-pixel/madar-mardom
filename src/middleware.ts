@@ -47,11 +47,16 @@ export function middleware(request: NextRequest) {
   );
   if (dashboardRule) {
     const [, allowedRoles] = dashboardRule;
-    // Placeholder: read role from a session cookie set at login time.
-    // With NextAuth this becomes `const token = await getToken({ req: request })`.
-    // Defaults to "ADMIN" here to match the demo session in src/lib/auth.ts —
-    // update both together once real auth replaces the mock.
-    const role = request.cookies.get("mm_role")?.value ?? "ADMIN";
+    // Placeholder: read role from a session cookie set by the demo login page
+    // (src/app/login). With NextAuth this becomes `const token = await getToken({ req: request })`.
+    const role = request.cookies.get("mm_role")?.value;
+
+    if (!role) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
 
     if (!allowedRoles.includes(role)) {
       const url = request.nextUrl.clone();

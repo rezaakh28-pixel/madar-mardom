@@ -88,12 +88,12 @@ Brand tokens live in `tailwind.config.ts` (`navy`, `orange`, `surface`, `ink`) a
 | Area | Status | Where to plug in the real thing |
 |---|---|---|
 | Content (articles, authors, pulse data) | Typed mock data | `src/lib/mock-data.ts` — every function's signature already matches the Prisma query it should become (see inline comments) |
-| Auth / sessions | Mock session, always logged in | `src/lib/auth.ts` — swap `getSession()` for NextAuth's `auth()` |
-| RBAC on `/dashboard/*` | Cookie-based placeholder in `middleware.ts` | Replace the cookie read with `getToken()` from `next-auth/jwt` |
+| Auth / sessions | Working demo login (`/login`) — pick a role, no real password/account | `src/lib/auth.ts` + `src/app/login/` — swap for NextAuth's `auth()` and a real `Credentials`/OAuth provider |
+| RBAC on `/dashboard/*` | Enforced in `middleware.ts` via the `mm_role` cookie set at `/login` | Replace the cookie read with `getToken()` from `next-auth/jwt` once NextAuth is wired up |
 | AI features (summarize, suggest title/tags/category, TTS, dedupe, SEO gen) | Deterministic stubs with real function signatures | `src/lib/ai.ts` — swap each function body for a real model call |
 | Voice of People submissions | In-memory store (`src/lib/voice-store.ts`) | Swap for `db.voiceSubmission.*` once Prisma is connected |
 | Captcha | Visual placeholder checkbox | Wire a real widget (e.g. Cloudflare Turnstile) in `submission-form.tsx` + verify the token server-side in `api/voice/submit/route.ts` |
-| Image uploads | Non-functional placeholder UI | Wire to your object storage (S3, R2, etc.) of choice |
+| Image / file uploads | **Working** — `src/app/api/upload/route.ts` uploads to Vercel Blob | One-time setup on Vercel: **Storage tab → Create Database → Blob → Connect to Project** (auto-adds `BLOB_READ_WRITE_TOKEN` and redeploys) |
 
 ## Notes on RTL
 

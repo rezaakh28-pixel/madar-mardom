@@ -159,6 +159,7 @@ export interface VoiceSubmission {
   description: string;
   category: CategorySlug;
   location?: string;
+  fileUrls?: string[];
   status: VoiceSubmissionStatus;
   submittedAt: string;
   statusNote?: string;

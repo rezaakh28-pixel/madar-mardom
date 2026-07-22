@@ -28,7 +28,7 @@ export const CATEGORIES: Category[] = [
   { slug: "data", title: "داده", description: "روایت اعداد و آمار رسمی" },
   { slug: "video", title: "ویدیو", description: "گزارش‌های تصویری" },
   { slug: "podcast", title: "پادکست", description: "شنیدنی‌های مدار مردم" },
-  { slug: "infographic", title: "اینفوگرافیک", description: "داده‌ها به زبان تصویر" },
+  { slug: "infographic", title: "گزارش تصویری", description: "داده‌ها به زبان تصویر" },
   { slug: "voice", title: "صدای مردم", description: "روایت‌های مردمی" },
 ];
 
