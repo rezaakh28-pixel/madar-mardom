@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { Button } from "@/components/ui/button";
-import { getSession, ROLE_LABELS_FA } from "@/lib/auth";
+import { ROLE_LABELS_FA } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { logoutAction } from "@/app/login/actions";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
