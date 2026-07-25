@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { NewsArticle } from "@/types";
-import { approveArticleAction, rejectArticleAction, restoreRevisionAction } from "@/app/(dashboard)/editor/actions";
+import { approveArticleAction, rejectArticleAction, restoreRevisionAction } from "@/app/dashboard/editor/actions";
 import { timeAgoFa } from "@/lib/utils";
 
 export function ReviewQueue({ articles }: { articles: NewsArticle[] }) {

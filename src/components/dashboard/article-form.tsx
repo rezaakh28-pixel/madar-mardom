@@ -16,7 +16,7 @@ import {
   suggestCategoryAction,
   checkDuplicateAction,
   saveArticleAction,
-} from "@/app/(dashboard)/reporter/actions";
+} from "@/app/dashboard/reporter/actions";
 
 export function ArticleForm() {
   const [title, setTitle] = React.useState("");

@@ -4,7 +4,7 @@ import * as React from "react";
 import type { User } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toggleUserActiveAction } from "@/app/(dashboard)/admin/actions";
+import { toggleUserActiveAction } from "@/app/dashboard/admin/actions";
 import { ROLE_LABELS_FA } from "@/lib/auth";
 import { getCategoryBySlug } from "@/lib/mock-data";
 import { formatJalali } from "@/lib/utils";

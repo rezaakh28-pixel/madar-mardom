@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createEditorAction, type CreateEditorState } from "@/app/(dashboard)/admin/actions";
+import { createEditorAction, type CreateEditorState } from "@/app/dashboard/admin/actions";
 import { CATEGORIES } from "@/lib/mock-data";
 
 const initialState: CreateEditorState = {};

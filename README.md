@@ -84,7 +84,7 @@ src/
 │   │   ├── special-cases/page.tsx  and special-cases/[slug]/page.tsx
 │   │   ├── voice/page.tsx          # submission + tracking
 │   │   ├── about/page.tsx, contact/page.tsx
-│   └── (dashboard)/                # internal panels, gated by RBAC
+│   └── dashboard/                  # internal panels, gated by RBAC (NOT a route group — "dashboard" is intentionally a real URL segment)
 │       ├── layout.tsx              # sidebar + topbar, reads real session
 │       ├── reporter/               # article creation + AI-assist
 │       ├── editor/                 # review queue, filtered to the editor's assigned section

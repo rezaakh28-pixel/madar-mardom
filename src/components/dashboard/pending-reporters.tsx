@@ -4,7 +4,7 @@ import * as React from "react";
 import type { User } from "@prisma/client";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { approveReporterAction, rejectReporterAction } from "@/app/(dashboard)/admin/actions";
+import { approveReporterAction, rejectReporterAction } from "@/app/dashboard/admin/actions";
 import { formatJalali } from "@/lib/utils";
 
 export function PendingReporters({ users }: { users: User[] }) {

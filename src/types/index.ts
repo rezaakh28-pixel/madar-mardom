@@ -167,7 +167,7 @@ export interface VoiceSubmission {
 
 // -- Dashboard / admin -------------------------------------------------------
 // Note: real user accounts use Prisma's generated `User` type (from
-// @prisma/client) directly — see src/app/(dashboard)/admin/page.tsx. This
+// @prisma/client) directly — see src/app/dashboard/admin/page.tsx. This
 // SiteStats type covers the article-related stats, which are still mock data.
 
 export interface SiteStats {
