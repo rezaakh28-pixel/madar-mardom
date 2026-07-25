@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { loginAsReporterAction, loginAsEditorAction, loginAsAdminAction } from "./actions";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { LoginForm } from "@/components/login/login-form";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -25,34 +25,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <Image src="/logo.jpg" alt="مدار مردم" fill sizes="48px" className="object-cover" priority />
           </span>
           <h1 className="text-lg font-extrabold text-primary">ورود به پنل داخلی</h1>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            این یک ورود نمایشی است — نقش مورد نظر را انتخاب کنید تا وارد همان پنل شوید.
-          </p>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <form action={loginAsReporterAction}>
-            <input type="hidden" name="next" value={next ?? ""} />
-            <Button type="submit" variant="outline" className="w-full">
-              ورود به‌عنوان خبرنگار
-            </Button>
-          </form>
-          <form action={loginAsEditorAction}>
-            <input type="hidden" name="next" value={next ?? ""} />
-            <Button type="submit" variant="outline" className="w-full">
-              ورود به‌عنوان سردبیر
-            </Button>
-          </form>
-          <form action={loginAsAdminAction}>
-            <input type="hidden" name="next" value={next ?? ""} />
-            <Button type="submit" className="w-full">
-              ورود به‌عنوان مدیر
-            </Button>
-          </form>
-        </div>
+        <LoginForm next={next} />
 
-        <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
-          حساب کاربری و رمز عبور واقعی هنوز وصل نشده — این صفحه فقط برای پیش‌نمایش پنل‌های داخلی است.
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          خبرنگار هستید و هنوز حساب ندارید؟{" "}
+          <Link href="/register" className="text-primary hover:underline">
+            ثبت‌نام کنید
+          </Link>
         </p>
       </div>
     </div>

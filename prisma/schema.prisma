@@ -1,5 +1,8 @@
 // مدار مردم — Prisma schema
-// Run `npx prisma db push` (or migrate dev) once DATABASE_URL is set.
+// Uses Prisma Postgres (Vercel Marketplace). Once you connect a Prisma
+// Postgres database to this project on Vercel (Storage tab -> Connect
+// Database -> Prisma), DATABASE_URL is set automatically. Then run
+// `npx prisma db push` once to create the tables.
 
 generator client {
   provider = "prisma-client-js"
@@ -14,6 +17,14 @@ enum UserRole {
   REPORTER
   EDITOR
   ADMIN
+}
+
+/// Reporter self-registration goes through PENDING until an admin approves it.
+/// Editors and the seeded admin are created directly as APPROVED.
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ArticleStatus {
@@ -60,7 +71,10 @@ model User {
   bio           String?
   avatarUrl     String?
   role          UserRole  @default(REPORTER)
+  approvalStatus ApprovalStatus @default(APPROVED)
   isActive      Boolean   @default(true)
+  /// For EDITOR accounts: which section/beat (a Category.slug, e.g. "economy") they're responsible for.
+  beatCategorySlug String?
   twitter       String?
   telegram      String?
   instagram     String?

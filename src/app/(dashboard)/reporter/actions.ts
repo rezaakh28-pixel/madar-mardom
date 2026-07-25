@@ -7,6 +7,7 @@ import {
   summarizeArticle,
   detectDuplicate,
 } from "@/lib/ai";
+import { requireRole } from "@/lib/session";
 import { logger } from "@/lib/logger";
 
 export async function suggestTitleAction(body: string) {
@@ -42,7 +43,8 @@ export interface SaveArticleInput {
 
 /** Mock persistence — swap for `db.article.create(...)` / `db.article.update(...)` later. */
 export async function saveArticleAction(input: SaveArticleInput) {
-  logger.audit("article_saved", "usr_demo_reporter", {
+  const reporter = await requireRole("REPORTER");
+  logger.audit("article_saved", reporter.user.id, {
     status: input.action === "draft" ? "DRAFT" : "PENDING_REVIEW",
     title: input.title,
     coverImageUrl: input.coverImageUrl,

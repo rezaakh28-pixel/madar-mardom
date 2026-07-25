@@ -166,21 +166,13 @@ export interface VoiceSubmission {
 }
 
 // -- Dashboard / admin -------------------------------------------------------
-
-export interface DashboardUser {
-  id: string;
-  name: string;
-  username: string;
-  email: string;
-  role: UserRole;
-  isActive: boolean;
-  joinedAt: string;
-}
+// Note: real user accounts use Prisma's generated `User` type (from
+// @prisma/client) directly — see src/app/(dashboard)/admin/page.tsx. This
+// SiteStats type covers the article-related stats, which are still mock data.
 
 export interface SiteStats {
   totalArticles: number;
   publishedThisWeek: number;
-  activeReporters: number;
   pendingReview: number;
   totalViewsToday: number;
 }

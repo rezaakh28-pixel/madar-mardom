@@ -8,9 +8,9 @@ import type { UserRole } from "@/types";
 // must never import `next/headers` or anything else server-only. The
 // session reader that needs `next/headers` lives in `src/lib/session.ts`.
 //
-// This is a DEMO session, not real authentication — see the comments in
-// `src/lib/session.ts` and `src/app/login/` for how it works and what to
-// replace with real accounts.
+// Real accounts, password hashing, and an admin-approval flow for reporter
+// registration are wired up — see `src/app/login/`, `src/app/register/`,
+// and `src/lib/session.ts` for how sessions are issued and verified.
 // ---------------------------------------------------------------------------
 
 export interface Session {
@@ -19,6 +19,7 @@ export interface Session {
     name: string;
     username: string;
     role: UserRole;
+    beatCategorySlug?: string;
   };
 }
 

@@ -2,7 +2,6 @@ import type {
   Author,
   Category,
   CategorySlug,
-  DashboardUser,
   NewsArticle,
   PulseItem,
   SiteStats,
@@ -330,23 +329,11 @@ export function getPendingArticles(): NewsArticle[] {
   return PENDING_ARTICLES;
 }
 
-export const DASHBOARD_USERS: DashboardUser[] = [
-  { id: "usr_1", name: "سارا احمدی", username: "sara-ahmadi", email: "sara@madaremardom.ir", role: "REPORTER", isActive: true, joinedAt: hoursAgo(24 * 400) },
-  { id: "usr_2", name: "رضا کریمی", username: "reza-karimi", email: "reza@madaremardom.ir", role: "EDITOR", isActive: true, joinedAt: hoursAgo(24 * 600) },
-  { id: "usr_3", name: "مینا جعفری", username: "mina-jafari", email: "mina@madaremardom.ir", role: "REPORTER", isActive: true, joinedAt: hoursAgo(24 * 200) },
-  { id: "usr_4", name: "امیر رستمی", username: "amir-rostami", email: "amir@madaremardom.ir", role: "REPORTER", isActive: false, joinedAt: hoursAgo(24 * 150) },
-  { id: "usr_5", name: "لیلا نوری", username: "leila-noori", email: "leila@madaremardom.ir", role: "ADMIN", isActive: true, joinedAt: hoursAgo(24 * 800) },
-];
-
-export function getDashboardUsers(): DashboardUser[] {
-  return DASHBOARD_USERS;
-}
-
+/** Article-related stats only — user/account stats now come from the real database (see admin/page.tsx). */
 export function getSiteStats(): SiteStats {
   return {
     totalArticles: ARTICLES.length + PENDING_ARTICLES.length,
     publishedThisWeek: ARTICLES.filter((a) => Date.now() - +new Date(a.publishedAt) < 7 * 86_400_000).length,
-    activeReporters: DASHBOARD_USERS.filter((u) => u.role === "REPORTER" && u.isActive).length,
     pendingReview: PENDING_ARTICLES.length,
     totalViewsToday: ARTICLES.reduce((sum, a) => sum + Math.round(a.viewCount * 0.08), 0),
   };

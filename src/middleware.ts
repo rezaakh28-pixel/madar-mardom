@@ -1,15 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { verifySession } from "@/lib/signed-cookie";
 
 // ---------------------------------------------------------------------------
 // Edge middleware:
 //  1. Rate-limits sensitive POST routes (e.g. Voice of People submissions).
-//  2. Gates /dashboard/* routes by role, read from the session cookie.
+//  2. Gates /dashboard/* routes by role, verified from the signed session
+//     cookie set at /login (see src/app/login/actions.ts).
 //
 // NOTE: middleware runs on the Edge runtime, so it cannot import Prisma or
-// Node-only modules. Once NextAuth is wired in, replace the cookie check
-// below with `auth()` from `next-auth/middleware`, or use its
-// `withAuth` wrapper directly.
+// other Node-only modules — verifySession() uses the Web Crypto API, which
+// works on both Edge and Node, for exactly this reason. Once NextAuth is
+// wired in, replace the cookie check below with `auth()` from
+// `next-auth/middleware`, or use its `withAuth` wrapper directly.
 // ---------------------------------------------------------------------------
 
 const DASHBOARD_ROLE_BY_PREFIX: Record<string, string[]> = {
@@ -20,10 +23,11 @@ const DASHBOARD_ROLE_BY_PREFIX: Record<string, string[]> = {
 
 const RATE_LIMITED_ROUTES: Array<{ prefix: string; limit: number; windowMs: number }> = [
   { prefix: "/api/voice/submit", limit: 5, windowMs: 10 * 60 * 1000 }, // 5 submissions / 10 min / IP
-  { prefix: "/api/auth/login", limit: 10, windowMs: 5 * 60 * 1000 },
+  { prefix: "/login", limit: 15, windowMs: 5 * 60 * 1000 }, // brute-force guard on login attempts
+  { prefix: "/register", limit: 5, windowMs: 10 * 60 * 1000 },
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // -- 1. Rate limiting for sensitive POST routes -------------------------
@@ -47,18 +51,17 @@ export function middleware(request: NextRequest) {
   );
   if (dashboardRule) {
     const [, allowedRoles] = dashboardRule;
-    // Placeholder: read role from a session cookie set by the demo login page
-    // (src/app/login). With NextAuth this becomes `const token = await getToken({ req: request })`.
-    const role = request.cookies.get("mm_role")?.value;
+    const token = request.cookies.get("mm_session")?.value;
+    const payload = await verifySession(token);
 
-    if (!role) {
+    if (!payload) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
 
-    if (!allowedRoles.includes(role)) {
+    if (!allowedRoles.includes(payload.role)) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard/reporter";
       url.searchParams.set("denied", pathname);
@@ -70,5 +73,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/voice/:path*", "/api/auth/:path*"],
+  matcher: ["/dashboard/:path*", "/api/voice/:path*", "/login", "/register"],
 };
