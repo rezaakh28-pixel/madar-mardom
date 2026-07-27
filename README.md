@@ -34,6 +34,20 @@ Public content (articles, authors, pulse data) is fully functional against typed
 - RTL-first (`<html dir="rtl" lang="fa">`), mobile-first responsive, light/dark theme via `next-themes`
 - Vazirmatn (Persian) + Inter (Latin/numerals) via `next/font/google`
 
+## Content workflow
+
+Articles are real, database-backed content now (`Article` model in `prisma/schema.prisma`), with a full reporter → editor → public pipeline:
+
+1. **Reporter** writes an article in `/dashboard/reporter` and either saves it as a draft or sends it for review (`saveArticleAction` in `src/app/dashboard/reporter/actions.ts` — creates a real `Article` row with status `PENDING_REVIEW`).
+2. **Editor** sees it immediately in `/dashboard/editor` — filtered to their assigned beat(s) (an editor can be assigned multiple sections from the admin panel). From there they can:
+   - **Edit** the title/deck/lead/body/category before publishing.
+   - **انتشار فوری (Publish now)** — goes live immediately.
+   - **زمان‌بندی انتشار (Schedule)** — pick a date/time with the Jalali (Persian calendar) picker; the article publishes itself automatically once that time passes (public queries only return articles whose `publishedAt` is in the past — no cron job needed).
+   - **رد کردن (Reject)**.
+3. **Public site** reads only `PUBLISHED` articles whose `publishedAt` has passed (`src/lib/content.ts`), across the home page, category pages, the article page (which also increments a real view counter), and the author page.
+
+An editor assigned the "اقتصاد" (economy) beat also gets a **ویرایش نبض جامعه** section in their panel to update the Pulse of Society numbers — the same form the admin panel uses (`src/components/dashboard/pulse-edit-form.tsx`).
+
 ## Authentication
 
 There are three account types, each created a different way — by design, none of them can create themselves the "wrong" way:
@@ -86,9 +100,10 @@ src/
 │   │   ├── about/page.tsx, contact/page.tsx
 │   └── dashboard/                  # internal panels, gated by RBAC (NOT a route group — "dashboard" is intentionally a real URL segment)
 │       ├── layout.tsx              # sidebar + topbar, reads real session
-│       ├── reporter/               # article creation + AI-assist
-│       ├── editor/                 # review queue, filtered to the editor's assigned section
-│       └── admin/                  # stats, pending-reporter approval, editor creation, user table
+│       ├── pulse-actions.ts        # shared pulse-update action (admin, or editor with "economy" as a beat)
+│       ├── reporter/               # article creation + AI-assist -> creates a real PENDING_REVIEW Article
+│       ├── editor/                 # review queue (edit/publish-now/schedule/reject), filtered to the editor's beat(s)
+│       └── admin/                  # real stats, pending-reporter approval, editor create/edit/delete (multi-beat), user table, pulse editing
 ├── components/
 │   ├── ui/                         # Button, Card, Badge, Tabs, Input, Select, Avatar, DropdownMenu…
 │   ├── layout/                     # Navbar, Footer, Breadcrumb, ThemeToggle
@@ -98,10 +113,13 @@ src/
 │   ├── voice/                      # SubmissionForm, TrackingWidget
 │   ├── login/, register/           # LoginForm, RegisterForm
 │   ├── shared/                     # FileUpload (used by reporter cover image + voice attachments)
-│   └── dashboard/                  # Sidebar, ArticleForm, ReviewQueue, PendingReporters, CreateEditorForm, UserTable, StatCard
+│   └── dashboard/                  # Sidebar, ArticleForm, ReviewQueue (+ inline edit), JalaliDateTimePicker, PendingReporters, CreateEditorForm, EditorsManager, BeatCheckboxGroup, PulseEditForm, UserTable, StatCard
 ├── lib/
 │   ├── db.ts                       # Prisma client singleton
-│   ├── mock-data.ts                # typed mock content — swap for Prisma queries later (see comments)
+│   ├── content.ts                  # real article queries + reporter/editor workflow (create, edit, publish, schedule)
+│   ├── pulse.ts                    # real "نبض جامعه" queries + admin/economy-editor edit support
+│   ├── mock-data.ts                # CATEGORIES (fixed list) + SPECIAL_CASES (not migrated yet, starts empty)
+│   ├── slugify.ts                  # URL slug generator for new articles (keeps Persian script)
 │   ├── ai.ts                       # AI abstraction layer (stubs — see below)
 │   ├── seo.ts                      # Metadata / OpenGraph / JSON-LD helpers
 │   ├── auth.ts                     # client-safe RBAC helpers (hasRole, ROLE_LABELS_FA) — no server-only imports
@@ -110,12 +128,12 @@ src/
 │   ├── passwords.ts                # bcrypt hashing
 │   ├── rate-limit.ts               # in-memory fixed-window limiter
 │   ├── logger.ts                   # structured logger
-│   └── utils.ts                    # cn(), Persian number/date formatting
+│   └── utils.ts                    # cn(), Persian number/date formatting, HTML-escaping
 ├── types/index.ts                  # NewsArticle, Author, SpecialCase, PulseItem, etc.
 └── middleware.ts                   # RBAC gate for /dashboard/*, rate limiting for sensitive POSTs
 
 prisma/
-├── schema.prisma                   # User (with approval workflow + editor beat), Article, Category, SpecialCase, VoiceSubmission, PulseSnapshot
+├── schema.prisma                   # User (approval workflow + multi-section editor beats), Article (plain categorySlug, no Category table), PulseItem, SpecialCase, VoiceSubmission
 └── seed.ts                         # creates the initial admin account from ADMIN_USERNAME/ADMIN_PASSWORD
 ```
 
@@ -127,7 +145,10 @@ Brand tokens live in `tailwind.config.ts` (`navy`, `orange`, `surface`, `ink`) a
 
 | Area | Status | Where to plug in the real thing |
 |---|---|---|
-| Content (articles, authors, pulse data) | Typed mock data | `src/lib/mock-data.ts` — every function's signature already matches the Prisma query it should become (see inline comments) |
+| Content (articles) | **Real** — reporters submit, editors review/edit/publish, public pages read from the database. See "Content workflow" below. | `src/lib/content.ts` |
+| "نبض جامعه" (Pulse of Society) | **Real** — editable from the admin panel, or by an editor whose beat includes "economy". Starts as placeholders ("—") until someone fills in real numbers. | `src/lib/pulse.ts` |
+| Categories (site sections) | Fixed, curated list — not database content, deliberately | `src/lib/mock-data.ts` (`CATEGORIES`) |
+| پرونده‌های ویژه (Special Cases) | Not migrated yet — starts empty | `src/lib/mock-data.ts` (`SPECIAL_CASES`) |
 | Accounts, login, registration, RBAC | **Real** — Postgres-backed, bcrypt-hashed passwords, signed session cookies. See "Authentication" above. | Optional upgrade path to NextAuth is noted in comments in `src/lib/session.ts` if you outgrow this |
 | AI features (summarize, suggest title/tags/category, TTS, dedupe, SEO gen) | Deterministic stubs with real function signatures | `src/lib/ai.ts` — swap each function body for a real model call |
 | Voice of People submissions | In-memory store (`src/lib/voice-store.ts`) | Swap for `db.voiceSubmission.*` once you want these persisted long-term |

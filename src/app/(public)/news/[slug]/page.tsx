@@ -7,32 +7,27 @@ import { ShareButtons } from "@/components/news/share-buttons";
 import { RelatedArticles } from "@/components/news/related-articles";
 import { AuthorCard } from "@/components/news/author-card";
 import { Badge } from "@/components/ui/badge";
-import { ARTICLES, getArticleBySlug, getRelatedArticles } from "@/lib/mock-data";
+import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
 import { SITE_URL, buildArticleMetadata, articleJsonLd } from "@/lib/seo";
-import { formatFa, formatJalali } from "@/lib/utils";
+import { formatFa, formatJalali, textToSafeHtml } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Pre-render known slugs at build time; new slugs fall back to on-demand rendering.
-export function generateStaticParams() {
-  return ARTICLES.map((a) => ({ slug: a.slug }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug).catch(() => null);
   if (!article) return {};
   return buildArticleMetadata(article);
 }
 
 export default async function ArticlePage({ params }: PageProps) {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug).catch(() => null);
   if (!article) notFound();
 
-  const related = getRelatedArticles(article, 3);
+  const related = await getRelatedArticles(article, 3).catch(() => []);
   const url = `${SITE_URL}/news/${article.slug}`;
 
   return (
@@ -104,13 +99,12 @@ export default async function ArticlePage({ params }: PageProps) {
         </audio>
       )}
 
-      {/* NOTE: body is trusted CMS-authored HTML in this mock. In production, sanitize
-          server-side (e.g. with `sanitize-html`) before rendering, or store body as
-          structured content (Markdown / a rich-text JSON doc) rather than raw HTML. */}
+      {/* Reporters/editors write body as plain text; textToSafeHtml() escapes it and wraps
+          paragraphs before this ever reaches dangerouslySetInnerHTML. */}
       <div
         className="prose prose-neutral max-w-none prose-headings:font-extrabold prose-a:text-primary"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: article.body }}
+        dangerouslySetInnerHTML={{ __html: textToSafeHtml(article.body) }}
       />
 
       {article.gallery && article.gallery.length > 0 && (

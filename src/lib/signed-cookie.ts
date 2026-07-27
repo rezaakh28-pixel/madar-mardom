@@ -20,7 +20,7 @@ export interface SessionPayload {
   username: string;
   name: string;
   role: UserRole;
-  beatCategorySlug?: string; // for EDITOR accounts: their assigned news section
+  beatCategorySlugs?: string[]; // for EDITOR accounts: their assigned news section(s)
   exp: number; // unix seconds
 }
 

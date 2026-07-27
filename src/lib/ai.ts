@@ -1,5 +1,6 @@
 import type { NewsArticle } from "@/types";
-import { ARTICLES } from "@/lib/mock-data";
+import { db } from "@/lib/db";
+import { getRelatedArticles } from "@/lib/content";
 
 // ---------------------------------------------------------------------------
 // AI abstraction layer for مدار مردم.
@@ -59,9 +60,22 @@ export async function suggestTags(body: string): Promise<string[]> {
 export async function detectDuplicate(body: string): Promise<boolean> {
   await fakeLatency();
   const normalized = body.replace(/<[^>]+>/g, " ").trim().toLowerCase();
-  return ARTICLES.some((a) => {
+  if (normalized.length === 0) return false;
+
+  let candidates: Array<{ body: string }> = [];
+  try {
+    candidates = await db.article.findMany({
+      select: { body: true },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    });
+  } catch {
+    return false; // No database connected yet — nothing to compare against.
+  }
+
+  return candidates.some((a) => {
     const existing = a.body.replace(/<[^>]+>/g, " ").trim().toLowerCase();
-    if (existing.length === 0 || normalized.length === 0) return false;
+    if (existing.length === 0) return false;
     const shorter = Math.min(existing.length, normalized.length);
     const longer = Math.max(existing.length, normalized.length);
     return shorter / longer > 0.85 && existing.slice(0, 50) === normalized.slice(0, 50);
@@ -108,10 +122,12 @@ export async function convertTextToSpeech(body: string): Promise<string> {
   return `/generated-audio/tts-${hash}.mp3`;
 }
 
-/** Suggests related articles for a given article (mock: same category, excluding itself). */
+/** Suggests related articles for a given article (same category, excluding itself — see src/lib/content.ts). */
 export async function suggestRelatedArticles(article: NewsArticle): Promise<NewsArticle[]> {
   await fakeLatency();
-  return ARTICLES.filter(
-    (a) => a.category.slug === article.category.slug && a.slug !== article.slug
-  ).slice(0, 3);
+  try {
+    return await getRelatedArticles(article, 3);
+  } catch {
+    return [];
+  }
 }

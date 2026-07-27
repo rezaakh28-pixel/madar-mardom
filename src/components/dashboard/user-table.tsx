@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toggleUserActiveAction } from "@/app/dashboard/admin/actions";
 import { ROLE_LABELS_FA } from "@/lib/auth";
-import { getCategoryBySlug } from "@/lib/mock-data";
 import { formatJalali } from "@/lib/utils";
 import type { UserRole } from "@/types";
 
@@ -32,12 +31,11 @@ export function UserTable({ users: initialUsers }: { users: User[] }) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
-      <table className="w-full min-w-[720px] text-sm">
+      <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-border text-right text-xs text-muted-foreground">
             <th className="p-3 font-medium">کاربر</th>
             <th className="p-3 font-medium">نقش</th>
-            <th className="p-3 font-medium">بخش خبری</th>
             <th className="p-3 font-medium">وضعیت</th>
             <th className="p-3 font-medium">تاریخ عضویت</th>
             <th className="p-3 font-medium" />
@@ -54,9 +52,6 @@ export function UserTable({ users: initialUsers }: { users: User[] }) {
               </td>
               <td className="p-3">
                 <Badge variant="outline">{ROLE_LABELS_FA[user.role as UserRole]}</Badge>
-              </td>
-              <td className="p-3 text-xs text-muted-foreground">
-                {user.beatCategorySlug ? getCategoryBySlug(user.beatCategorySlug)?.title ?? user.beatCategorySlug : "—"}
               </td>
               <td className="p-3">
                 <Badge variant={user.isActive ? "success" : "muted"}>{user.isActive ? "فعال" : "غیرفعال"}</Badge>

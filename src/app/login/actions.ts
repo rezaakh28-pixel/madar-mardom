@@ -61,7 +61,7 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
     username: user.username,
     name: user.name,
     role: user.role,
-    beatCategorySlug: user.beatCategorySlug ?? undefined,
+    beatCategorySlugs: user.beatCategorySlugs,
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8, // 8 hours
   });
 

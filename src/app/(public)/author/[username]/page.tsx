@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticleCard } from "@/components/news/article-card";
-import { AUTHORS, getArticlesByAuthor, getAuthorByUsername } from "@/lib/mock-data";
+import { getArticlesByAuthor, getAuthorByUsername } from "@/lib/content";
 import { buildPageMetadata, authorJsonLd } from "@/lib/seo";
 import { ROLE_LABELS_FA } from "@/lib/auth";
 import { formatFa } from "@/lib/utils";
@@ -14,13 +14,9 @@ interface PageProps {
   params: Promise<{ username: string }>;
 }
 
-export function generateStaticParams() {
-  return AUTHORS.map((a) => ({ username: a.username }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params;
-  const author = getAuthorByUsername(username);
+  const author = await getAuthorByUsername(username).catch(() => null);
   if (!author) return {};
   return buildPageMetadata({
     title: author.name,
@@ -31,10 +27,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AuthorPage({ params }: PageProps) {
   const { username } = await params;
-  const author = getAuthorByUsername(username);
+  const author = await getAuthorByUsername(username).catch(() => null);
   if (!author) notFound();
 
-  const articles = getArticlesByAuthor(username);
+  const articles = await getArticlesByAuthor(username).catch(() => []);
   const news = articles.filter((a) => a.kind === "NEWS" || a.kind === "REPORT");
   const analysis = articles.filter((a) => a.kind === "ANALYSIS" || a.kind === "NOTE");
 
@@ -59,7 +55,7 @@ export default async function AuthorPage({ params }: PageProps) {
             <Badge>{ROLE_LABELS_FA[author.role]}</Badge>
           </div>
           <p className="text-sm font-medium text-secondary">{author.title}</p>
-          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{author.bio}</p>
+          {author.bio && <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{author.bio}</p>}
           <p className="font-numeral text-xs text-muted-foreground">
             {formatFa(author.articleCount)} مطلب منتشرشده
           </p>

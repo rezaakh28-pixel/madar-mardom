@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { ArticleCard } from "@/components/news/article-card";
-import { getLatestArticles } from "@/lib/mock-data";
+import { getLatestArticles } from "@/lib/content";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -10,9 +10,13 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/news",
 });
 
-export default function NewsIndexPage() {
-  // Swap for `db.article.findMany({ where: { status: "PUBLISHED" }, orderBy: { publishedAt: "desc" } })`.
-  const articles = getLatestArticles(24);
+export default async function NewsIndexPage() {
+  let articles: Awaited<ReturnType<typeof getLatestArticles>> = [];
+  try {
+    articles = await getLatestArticles(24);
+  } catch {
+    // Public pages degrade gracefully rather than crashing before a database is connected.
+  }
 
   return (
     <div className="container-page py-8">
@@ -23,11 +27,17 @@ export default function NewsIndexPage() {
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">تازه‌ترین رویدادها، به‌ترتیب انتشار.</p>
       </header>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {articles.map((article, index) => (
-          <ArticleCard key={article.id} article={article} priority={index < 3} />
-        ))}
-      </div>
+      {articles.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          هنوز خبری منتشر نشده است.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {articles.map((article, index) => (
+            <ArticleCard key={article.id} article={article} priority={index < 3} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

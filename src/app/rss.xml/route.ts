@@ -1,4 +1,4 @@
-import { ARTICLES } from "@/lib/mock-data";
+import { getLatestArticles } from "@/lib/content";
 import { SITE_NAME, SITE_SLOGAN, SITE_URL } from "@/lib/seo";
 
 function escapeXml(value: string): string {
@@ -11,9 +11,9 @@ function escapeXml(value: string): string {
 }
 
 export async function GET() {
-  const items = [...ARTICLES]
-    .sort((a, b) => +new Date(b.publishedAt) - +new Date(a.publishedAt))
-    .slice(0, 30)
+  const articles = await getLatestArticles(30).catch(() => []);
+
+  const items = articles
     .map(
       (article) => `
     <item>

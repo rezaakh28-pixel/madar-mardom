@@ -3,24 +3,33 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { UserTable } from "@/components/dashboard/user-table";
 import { PendingReporters } from "@/components/dashboard/pending-reporters";
 import { CreateEditorForm } from "@/components/dashboard/create-editor-form";
-import { getSiteStats } from "@/lib/mock-data";
+import { EditorsManager } from "@/components/dashboard/editors-manager";
+import { PulseEditForm } from "@/components/dashboard/pulse-edit-form";
+import { getSiteStats } from "@/lib/content";
+import { getPulseItems } from "@/lib/pulse";
 import { db } from "@/lib/db";
 import type { User } from "@prisma/client";
 
 export default async function AdminDashboardPage() {
-  const stats = getSiteStats();
-
   let users: User[] = [];
+  let stats = { totalArticles: 0, publishedThisWeek: 0, pendingReview: 0, totalViews: 0 };
+  let pulseItems: Awaited<ReturnType<typeof getPulseItems>> = [];
   let dbError: string | null = null;
+
   try {
-    users = await db.user.findMany({ orderBy: { createdAt: "desc" } });
+    [users, stats, pulseItems] = await Promise.all([
+      db.user.findMany({ orderBy: { createdAt: "desc" } }),
+      getSiteStats(),
+      getPulseItems(),
+    ]);
   } catch {
     dbError =
-      "اتصال به پایگاه‌داده برقرار نیست. برای مدیریت کاربران، ابتدا یک دیتابیس Postgres را طبق راهنمای README به پروژه وصل کنید.";
+      "اتصال به پایگاه‌داده برقرار نیست. برای مدیریت کاربران و آمار، ابتدا یک دیتابیس Postgres را طبق راهنمای README به پروژه وصل کنید.";
   }
 
   const pending = users.filter((u) => u.approvalStatus === "PENDING");
-  const otherUsers = users.filter((u) => u.approvalStatus !== "PENDING");
+  const editors = users.filter((u) => u.role === "EDITOR");
+  const otherUsers = users.filter((u) => u.approvalStatus !== "PENDING" && u.role !== "EDITOR");
   const activeReportersCount = users.filter(
     (u) => u.role === "REPORTER" && u.isActive && u.approvalStatus === "APPROVED"
   ).length;
@@ -43,7 +52,7 @@ export default async function AdminDashboardPage() {
         <StatCard label="منتشرشده این هفته" value={stats.publishedThisWeek} icon={TrendingUp} />
         <StatCard label="خبرنگاران فعال" value={activeReportersCount} icon={Users} />
         <StatCard label="در انتظار بررسی خبر" value={stats.pendingReview} icon={Clock} />
-        <StatCard label="بازدید امروز" value={stats.totalViewsToday} icon={Eye} />
+        <StatCard label="کل بازدید مطالب" value={stats.totalViews} icon={Eye} />
       </section>
 
       {pending.length > 0 && (
@@ -61,9 +70,22 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-bold text-foreground">همه کاربران</h2>
+        <h2 className="mb-3 text-lg font-bold text-foreground">سردبیران ({editors.length})</h2>
+        <EditorsManager editors={editors} />
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-foreground">سایر کاربران</h2>
         <UserTable users={otherUsers} />
       </section>
+
+      {!dbError && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold text-foreground">ویرایش اطلاعات «نبض جامعه»</h2>
+          <p className="mb-3 text-sm text-muted-foreground">این اطلاعات در صفحه اصلی سایت نمایش داده می‌شود.</p>
+          <PulseEditForm items={pulseItems} />
+        </section>
+      )}
     </div>
   );
 }

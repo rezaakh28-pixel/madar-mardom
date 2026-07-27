@@ -29,6 +29,8 @@ export function ArticleForm() {
   const [duplicateWarning, setDuplicateWarning] = React.useState(false);
   const [aiBusy, setAiBusy] = React.useState<string | null>(null);
   const [saveState, setSaveState] = React.useState<"idle" | "saved" | "submitted">("idle");
+  const [saving, setSaving] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
 
   async function runAi(task: string, fn: () => Promise<void>) {
     setAiBusy(task);
@@ -52,9 +54,25 @@ export function ArticleForm() {
     runAi("duplicate", async () => setDuplicateWarning(await checkDuplicateAction(body || lead)));
 
   async function handleSave(action: "draft" | "submit") {
-    await saveArticleAction({ title, deck, lead, body, category, tags, coverImageUrl, action });
+    setSaving(true);
+    setSaveError(null);
+    const result = await saveArticleAction({ title, deck, lead, body, category, tags, coverImageUrl, action });
+    setSaving(false);
+
+    if (!result.ok) {
+      setSaveError(result.error ?? "ذخیره خبر با خطا مواجه شد.");
+      return;
+    }
+
     setSaveState(action === "draft" ? "saved" : "submitted");
-    setTimeout(() => setSaveState("idle"), 3000);
+    setTitle("");
+    setDeck("");
+    setLead("");
+    setBody("");
+    setTags([]);
+    setCoverImageUrl("");
+    setDuplicateWarning(false);
+    setTimeout(() => setSaveState("idle"), 4000);
   }
 
   return (
@@ -158,16 +176,17 @@ export function ArticleForm() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-        <Button type="button" variant="outline" className="gap-1.5" onClick={() => handleSave("draft")}>
+        <Button type="button" variant="outline" className="gap-1.5" disabled={saving} onClick={() => handleSave("draft")}>
           <Save className="h-4 w-4" />
           ذخیره پیش‌نویس
         </Button>
-        <Button type="button" className="gap-1.5" onClick={() => handleSave("submit")}>
+        <Button type="button" className="gap-1.5" disabled={saving} onClick={() => handleSave("submit")}>
           <Send className="h-4 w-4" />
           ارسال برای سردبیر
         </Button>
         {saveState === "saved" && <span className="text-sm text-rise">پیش‌نویس ذخیره شد.</span>}
         {saveState === "submitted" && <span className="text-sm text-rise">برای سردبیر ارسال شد.</span>}
+        {saveError && <span className="text-sm text-destructive">{saveError}</span>}
       </div>
     </div>
   );

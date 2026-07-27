@@ -39,3 +39,24 @@ export function timeAgoFa(date: Date | string): string {
 export function readingTime(wordCount: number): number {
   return Math.max(1, Math.round(wordCount / 180));
 }
+
+/**
+ * Converts plain text (as typed into the reporter's/editor's textarea, with
+ * blank-line-separated paragraphs) into safe HTML paragraphs for rendering.
+ * Escapes HTML special characters first — article body is now real
+ * user-submitted content, not trusted mock data, so this must not allow
+ * arbitrary markup/script injection via dangerouslySetInnerHTML.
+ */
+export function textToSafeHtml(text: string): string {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  return escaped
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br />")}</p>`)
+    .join("");
+}

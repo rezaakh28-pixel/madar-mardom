@@ -28,7 +28,7 @@ export async function toggleUserActiveAction(userId: string, isActive: boolean) 
   revalidatePath("/dashboard/admin");
 }
 
-const createEditorSchema = z.object({
+const editorBaseSchema = {
   name: z.string().min(2, "نام را کامل وارد کنید").max(80),
   username: z
     .string()
@@ -36,8 +36,12 @@ const createEditorSchema = z.object({
     .max(30)
     .regex(/^[a-zA-Z0-9_-]+$/, "نام کاربری فقط می‌تواند شامل حروف انگلیسی، عدد، خط تیره و زیرخط باشد"),
   email: z.string().email("ایمیل معتبر نیست"),
+  beatCategorySlugs: z.array(z.string()).min(1, "حداقل یک بخش خبری را انتخاب کنید"),
+};
+
+const createEditorSchema = z.object({
+  ...editorBaseSchema,
   password: z.string().min(8, "رمز عبور باید حداقل ۸ نویسه باشد"),
-  beatCategorySlug: z.string().min(1, "بخش خبری را انتخاب کنید"),
 });
 
 export interface CreateEditorState {
@@ -56,14 +60,14 @@ export async function createEditorAction(
     username: formData.get("username"),
     email: formData.get("email"),
     password: formData.get("password"),
-    beatCategorySlug: formData.get("beatCategorySlug"),
+    beatCategorySlugs: formData.getAll("beatCategorySlugs"),
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "اطلاعات وارد شده معتبر نیست." };
   }
 
-  const { name, username, email, password, beatCategorySlug } = parsed.data;
+  const { name, username, email, password, beatCategorySlugs } = parsed.data;
 
   const existing = await db.user.findFirst({ where: { OR: [{ username }, { email }] } });
   if (existing) {
@@ -81,11 +85,80 @@ export async function createEditorAction(
       role: "EDITOR",
       approvalStatus: "APPROVED",
       isActive: true,
-      beatCategorySlug,
+      beatCategorySlugs,
     },
   });
 
-  logger.audit("editor_created", admin.user.id, { username, beatCategorySlug });
+  logger.audit("editor_created", admin.user.id, { username, beatCategorySlugs });
   revalidatePath("/dashboard/admin");
   return { success: true };
+}
+
+const updateEditorSchema = z.object({
+  userId: z.string().min(1),
+  ...editorBaseSchema,
+  password: z.union([z.string().min(8, "رمز عبور باید حداقل ۸ نویسه باشد"), z.literal("")]),
+});
+
+export interface UpdateEditorState {
+  error?: string;
+  success?: boolean;
+}
+
+export async function updateEditorAction(
+  _prevState: UpdateEditorState,
+  formData: FormData
+): Promise<UpdateEditorState> {
+  const admin = await requireRole("ADMIN");
+
+  const parsed = updateEditorSchema.safeParse({
+    userId: formData.get("userId"),
+    name: formData.get("name"),
+    username: formData.get("username"),
+    email: formData.get("email"),
+    password: formData.get("password") ?? "",
+    beatCategorySlugs: formData.getAll("beatCategorySlugs"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "اطلاعات وارد شده معتبر نیست." };
+  }
+
+  const { userId, name, username, email, password, beatCategorySlugs } = parsed.data;
+
+  const existing = await db.user.findFirst({
+    where: { AND: [{ OR: [{ username }, { email }] }, { id: { not: userId } }] },
+  });
+  if (existing) {
+    return { error: "این نام کاربری یا ایمیل قبلاً برای کاربر دیگری استفاده شده است." };
+  }
+
+  try {
+    await db.user.update({
+      where: { id: userId, role: "EDITOR" },
+      data: {
+        name,
+        username,
+        email,
+        beatCategorySlugs,
+        ...(password ? { passwordHash: await hashPassword(password) } : {}),
+      },
+    });
+  } catch {
+    return { error: "این کاربر یافت نشد یا سردبیر نیست." };
+  }
+
+  logger.audit("editor_updated", admin.user.id, { userId, beatCategorySlugs });
+  revalidatePath("/dashboard/admin");
+  return { success: true };
+}
+
+export async function deleteEditorAction(userId: string) {
+  const admin = await requireRole("ADMIN");
+  const { count } = await db.user.deleteMany({ where: { id: userId, role: "EDITOR" } });
+  if (count > 0) {
+    logger.audit("editor_deleted", admin.user.id, { userId });
+    revalidatePath("/dashboard/admin");
+  }
+  return { ok: count > 0 };
 }

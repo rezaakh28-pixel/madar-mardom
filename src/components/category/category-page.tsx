@@ -1,15 +1,21 @@
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { ArticleCard } from "@/components/news/article-card";
-import { getArticlesByCategory, getCategoryBySlug } from "@/lib/mock-data";
+import { getArticlesByCategory } from "@/lib/content";
+import { getCategoryBySlug } from "@/lib/mock-data";
 import type { CategorySlug } from "@/types";
 
-export function CategoryPage({ slug }: { slug: CategorySlug }) {
+export async function CategoryPage({ slug }: { slug: CategorySlug }) {
   const category = getCategoryBySlug(slug);
   if (!category) notFound();
 
-  // Swap for `db.article.findMany({ where: { category: { slug }, status: "PUBLISHED" } })` later.
-  const articles = getArticlesByCategory(slug);
+  let articles: Awaited<ReturnType<typeof getArticlesByCategory>> = [];
+  let dbError = false;
+  try {
+    articles = await getArticlesByCategory(slug);
+  } catch {
+    dbError = true;
+  }
 
   return (
     <div className="container-page py-8">
@@ -22,7 +28,11 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
         )}
       </header>
 
-      {articles.length === 0 ? (
+      {dbError ? (
+        <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          اتصال به پایگاه‌داده برقرار نیست.
+        </p>
+      ) : articles.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           هنوز محتوایی در این بخش منتشر نشده است.
         </p>

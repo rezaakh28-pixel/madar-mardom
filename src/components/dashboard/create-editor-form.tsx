@@ -4,9 +4,8 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BeatCheckboxGroup } from "@/components/dashboard/beat-checkbox-group";
 import { createEditorAction, type CreateEditorState } from "@/app/dashboard/admin/actions";
-import { CATEGORIES } from "@/lib/mock-data";
 
 const initialState: CreateEditorState = {};
 
@@ -32,19 +31,8 @@ export function CreateEditorForm() {
         <Input id="editor-password" name="password" type="password" dir="ltr" minLength={8} required />
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
-        <Label htmlFor="editor-beat">بخش خبری</Label>
-        <Select name="beatCategorySlug" defaultValue="society">
-          <SelectTrigger id="editor-beat">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CATEGORIES.filter((c) => c.slug !== "voice").map((c) => (
-              <SelectItem key={c.slug} value={c.slug}>
-                {c.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label>بخش‌های خبری (می‌توانید چند بخش انتخاب کنید)</Label>
+        <BeatCheckboxGroup name="beatCategorySlugs" />
       </div>
 
       {state.error && <p className="text-sm text-destructive sm:col-span-2">{state.error}</p>}

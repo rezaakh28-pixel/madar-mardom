@@ -38,7 +38,7 @@ export async function getSession(): Promise<Session | null> {
       name: payload.name,
       username: payload.username,
       role: payload.role,
-      beatCategorySlug: payload.beatCategorySlug,
+      beatCategorySlugs: payload.beatCategorySlugs,
     },
   };
 }

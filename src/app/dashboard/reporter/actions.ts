@@ -8,6 +8,7 @@ import {
   detectDuplicate,
 } from "@/lib/ai";
 import { requireRole } from "@/lib/session";
+import { createArticle } from "@/lib/content";
 import { logger } from "@/lib/logger";
 
 export async function suggestTitleAction(body: string) {
@@ -41,15 +42,35 @@ export interface SaveArticleInput {
   action: "draft" | "submit";
 }
 
-/** Mock persistence — swap for `db.article.create(...)` / `db.article.update(...)` later. */
-export async function saveArticleAction(input: SaveArticleInput) {
+export interface SaveArticleResult {
+  ok: boolean;
+  error?: string;
+}
+
+export async function saveArticleAction(input: SaveArticleInput): Promise<SaveArticleResult> {
   const reporter = await requireRole("REPORTER");
-  logger.audit("article_saved", reporter.user.id, {
-    status: input.action === "draft" ? "DRAFT" : "PENDING_REVIEW",
-    title: input.title,
-    coverImageUrl: input.coverImageUrl,
-  });
-  // Simulate DB write latency.
-  await new Promise((r) => setTimeout(r, 300));
-  return { ok: true };
+
+  if (!input.title.trim() || !input.lead.trim() || !input.body.trim()) {
+    return { ok: false, error: "تیتر، لید و متن خبر نمی‌توانند خالی باشند." };
+  }
+
+  try {
+    const article = await createArticle({
+      authorId: reporter.user.id,
+      title: input.title.trim(),
+      deck: input.deck?.trim(),
+      lead: input.lead.trim(),
+      body: input.body.trim(),
+      categorySlug: input.category,
+      tags: input.tags,
+      coverImageUrl: input.coverImageUrl,
+      status: input.action === "draft" ? "DRAFT" : "PENDING_REVIEW",
+    });
+
+    logger.audit("article_saved", reporter.user.id, { articleId: article.id, status: article.status });
+    return { ok: true };
+  } catch (err) {
+    logger.error("article_save_failed", { message: err instanceof Error ? err.message : String(err) });
+    return { ok: false, error: "ذخیره خبر با خطا مواجه شد. اگر پایگاه‌داده هنوز وصل نشده، ابتدا آن را طبق README راه‌اندازی کنید." };
+  }
 }

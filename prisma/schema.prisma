@@ -2,7 +2,14 @@
 // Uses Prisma Postgres (Vercel Marketplace). Once you connect a Prisma
 // Postgres database to this project on Vercel (Storage tab -> Connect
 // Database -> Prisma), DATABASE_URL is set automatically. Then run
-// `npx prisma db push` once to create the tables.
+// `npx prisma db push` once to create/update the tables.
+//
+// Categories are NOT a database table — they're a fixed, curated list in
+// src/lib/mock-data.ts (CATEGORIES). Articles, VoiceSubmissions, and an
+// editor's beats all just store the category *slug* as a plain string
+// (validated against that fixed list in application code), which keeps
+// this schema simple since the category list itself isn't user-editable
+// content.
 
 generator client {
   provider = "prisma-client-js"
@@ -62,39 +69,29 @@ enum VoiceSubmissionStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  username      String    @unique
-  email         String    @unique
-  passwordHash  String
-  name          String
-  title         String?
-  bio           String?
-  avatarUrl     String?
-  role          UserRole  @default(REPORTER)
+  id             String         @id @default(cuid())
+  username       String         @unique
+  email          String         @unique
+  passwordHash   String
+  name           String
+  title          String?
+  bio            String?
+  avatarUrl      String?
+  role           UserRole       @default(REPORTER)
   approvalStatus ApprovalStatus @default(APPROVED)
-  isActive      Boolean   @default(true)
-  /// For EDITOR accounts: which section/beat (a Category.slug, e.g. "economy") they're responsible for.
-  beatCategorySlug String?
-  twitter       String?
-  telegram      String?
-  instagram     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isActive       Boolean        @default(true)
+  /// For EDITOR accounts: which section(s)/beat(s) they're responsible for — a list of category slugs (e.g. ["economy", "society"]). One editor can cover several sections.
+  beatCategorySlugs String[]    @default([])
+  twitter        String?
+  telegram       String?
+  instagram      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  articles      Article[] @relation("ArticleAuthor")
+  articles       Article[]      @relation("ArticleAuthor")
   reviewedByLogs ArticleRevision[] @relation("RevisionEditor")
 
   @@map("users")
-}
-
-model Category {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  title       String
-  description String?
-  articles    Article[]
-
-  @@map("categories")
 }
 
 model Article {
@@ -119,11 +116,8 @@ model Article {
   authorId       String
   author         User          @relation("ArticleAuthor", fields: [authorId], references: [id])
 
-  categoryId     String
-  category       Category      @relation(fields: [categoryId], references: [id])
-
-  specialCaseId  String?
-  specialCase    SpecialCase?  @relation(fields: [specialCaseId], references: [id])
+  /// Slug of a fixed category from src/lib/mock-data.ts (e.g. "economy") — not a DB relation, see note at top of file.
+  categorySlug   String
 
   seoTitle       String?
   seoDescription String?
@@ -132,6 +126,8 @@ model Article {
   viewCount      Int           @default(0)
   isFeatured     Boolean       @default(false)
 
+  reviewNote     String?
+
   publishedAt    DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -139,7 +135,7 @@ model Article {
   revisions      ArticleRevision[]
 
   @@index([status, publishedAt])
-  @@index([categoryId])
+  @@index([categorySlug])
   @@map("articles")
 }
 
@@ -155,18 +151,6 @@ model ArticleRevision {
   createdAt  DateTime @default(now())
 
   @@map("article_revisions")
-}
-
-model SpecialCase {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  title       String
-  summary     String
-  coverImageUrl String?
-  startedAt   DateTime  @default(now())
-  articles    Article[]
-
-  @@map("special_cases")
 }
 
 model VoiceSubmission {
@@ -187,13 +171,18 @@ model VoiceSubmission {
   @@map("voice_submissions")
 }
 
-model PulseSnapshot {
+/// "نبض جامعه" (Pulse of Society) — one editable row per metric (dollar,
+/// gold, coin, etc.), not a time series. Edited from the admin panel or by
+/// the editor whose beat is "economy" (see src/app/dashboard/admin/actions.ts).
+model PulseItem {
   id            String   @id @default(cuid())
-  metric        String   // usd | gold | coin | stock | inflation | subsidy | gasoline | housing | weather | pollution
-  value         Float
+  metric        String   @unique // usd | gold | coin | stock | inflation | subsidy | gasoline | housing | weather | pollution
+  label         String
+  value         String
   unit          String?
-  recordedAt    DateTime @default(now())
+  trend         String   @default("flat") // "up" | "down" | "flat"
+  changePercent Float?
+  updatedAt     DateTime @updatedAt
 
-  @@index([metric, recordedAt])
-  @@map("pulse_snapshots")
+  @@map("pulse_items")
 }

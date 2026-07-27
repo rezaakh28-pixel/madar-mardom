@@ -174,5 +174,5 @@ export interface SiteStats {
   totalArticles: number;
   publishedThisWeek: number;
   pendingReview: number;
-  totalViewsToday: number;
+  totalViews: number;
 }

@@ -12,7 +12,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const beatCategory = session.user.beatCategorySlug ? getCategoryBySlug(session.user.beatCategorySlug) : undefined;
+  const beatCategories = (session.user.beatCategorySlugs ?? [])
+    .map((slug) => getCategoryBySlug(slug)?.title)
+    .filter((title): title is string => Boolean(title));
 
   return (
     <div className="flex min-h-dvh flex-col bg-muted/30">
@@ -23,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">
             {session.user.name} · {ROLE_LABELS_FA[session.user.role]}
-            {beatCategory && ` · ${beatCategory.title}`}
+            {beatCategories.length > 0 && ` · ${beatCategories.join("، ")}`}
           </span>
           <form action={logoutAction}>
             <Button type="submit" variant="ghost" size="icon" aria-label="خروج">

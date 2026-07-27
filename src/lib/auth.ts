@@ -19,7 +19,7 @@ export interface Session {
     name: string;
     username: string;
     role: UserRole;
-    beatCategorySlug?: string;
+    beatCategorySlugs?: string[];
   };
 }
 
