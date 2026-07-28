@@ -32,7 +32,7 @@ function EditForm({
   const [deck, setDeck] = React.useState(article.deck ?? "");
   const [lead, setLead] = React.useState(article.lead);
   const [body, setBody] = React.useState(article.body);
-  const [category, setCategory] = React.useState(article.category.slug);
+  const [category, setCategory] = React.useState<string>(article.category.slug);
   const [saving, setSaving] = React.useState(false);
 
   async function handleSave() {
