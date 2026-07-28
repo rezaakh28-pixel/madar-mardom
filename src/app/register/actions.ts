@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/passwords";
 import { logger } from "@/lib/logger";
+import type { User } from "@prisma/client";
 
 const registerSchema = z.object({
   name: z.string().min(2, "نام را کامل وارد کنید").max(80),
@@ -38,7 +39,7 @@ export async function registerReporterAction(
 
   const { name, username, email, password } = parsed.data;
 
-  let existing;
+  let existing: User | null;
   try {
     existing = await db.user.findFirst({ where: { OR: [{ username }, { email }] } });
   } catch (err) {

@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/passwords";
 import { signSession } from "@/lib/signed-cookie";
 import { logger } from "@/lib/logger";
+import type { User } from "@prisma/client";
 
 const loginSchema = z.object({
   username: z.string().min(1, "نام کاربری را وارد کنید"),
@@ -31,7 +32,7 @@ export async function loginAction(_prevState: LoginState, formData: FormData): P
 
   const { username, password, next } = parsed.data;
 
-  let user;
+  let user: User | null;
   try {
     user = await db.user.findUnique({ where: { username } });
   } catch (err) {

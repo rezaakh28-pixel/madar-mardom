@@ -12,6 +12,7 @@ import {
 } from "@/lib/content";
 import { getPulseItems } from "@/lib/pulse";
 import { buildPageMetadata } from "@/lib/seo";
+import type { NewsArticle, PulseItem } from "@/types";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "خانه",
@@ -21,7 +22,13 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function HomePage() {
-  let hero, latest, pulseItems, mostVisited, society, economy, video;
+  let hero: NewsArticle | null;
+  let latest: NewsArticle[];
+  let pulseItems: PulseItem[];
+  let mostVisited: NewsArticle[];
+  let society: NewsArticle[];
+  let economy: NewsArticle[];
+  let video: NewsArticle[];
   let dbError = false;
 
   try {
