@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { SPECIAL_CASES } from "@/lib/mock-data";
+import { listSpecialCases } from "@/lib/content";
 import { buildPageMetadata } from "@/lib/seo";
 import { formatJalali } from "@/lib/utils";
 
@@ -12,7 +12,14 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/special-cases",
 });
 
-export default function SpecialCasesIndexPage() {
+export default async function SpecialCasesIndexPage() {
+  let cases: Awaited<ReturnType<typeof listSpecialCases>> = [];
+  try {
+    cases = await listSpecialCases();
+  } catch {
+    // fall through to empty state below
+  }
+
   return (
     <div className="container-page py-8">
       <Breadcrumb items={[{ label: "پرونده‌های ویژه", href: "/special-cases" }]} />
@@ -24,24 +31,36 @@ export default function SpecialCasesIndexPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {SPECIAL_CASES.map((sc) => (
-          <Link
-            key={sc.slug}
-            href={`/special-cases/${sc.slug}`}
-            className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card"
-          >
-            <div className="relative aspect-[16/9] w-full">
-              <Image src={sc.coverImage.url} alt={sc.coverImage.alt} fill sizes="500px" className="object-cover" />
-            </div>
-            <div className="flex flex-col gap-1.5 p-4">
-              <h2 className="font-bold text-foreground group-hover:text-primary">{sc.title}</h2>
-              <p className="line-clamp-2 text-sm text-muted-foreground">{sc.summary}</p>
-              <span className="mt-1 text-xs text-muted-foreground">از {formatJalali(sc.startedAt)}</span>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {cases.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          هنوز پرونده ویژه‌ای منتشر نشده است.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {cases.map((sc) => (
+            <Link
+              key={sc.slug}
+              href={`/special-cases/${sc.slug}`}
+              className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card"
+            >
+              <div className="relative aspect-[16/9] w-full">
+                <Image
+                  src={sc.coverImageUrl || "/covers/placeholder.jpg"}
+                  alt={sc.title}
+                  fill
+                  sizes="500px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 p-4">
+                <h2 className="font-bold text-foreground group-hover:text-primary">{sc.title}</h2>
+                <p className="line-clamp-2 text-sm text-muted-foreground">{sc.summary}</p>
+                <span className="mt-1 text-xs text-muted-foreground">از {formatJalali(sc.createdAt)}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

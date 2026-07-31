@@ -1,19 +1,16 @@
 /**
- * Generates a URL-safe slug from an article title, keeping Persian/Arabic
- * script intact (Persian news URLs commonly use native-script slugs, and
- * modern browsers handle this fine — it's percent-encoded automatically).
- * A short random suffix guarantees uniqueness even for duplicate titles.
+ * Generates a URL slug for a new article.
+ *
+ * Deliberately ASCII-only: an earlier version kept Persian script in the
+ * slug, which caused intermittent 404s in production — non-ASCII path
+ * segments depend on every layer (browser, Vercel's edge network, any
+ * redirects) encoding/decoding them identically, and that's not reliable
+ * enough to bet page availability on. A short, opaque, fully-ASCII id has
+ * zero encoding risk and is a completely standard, common pattern for news
+ * sites (e.g. `/news/m8x7k2a1b2c3`).
  */
-export function slugify(title: string): string {
-  const base = title
-    .trim()
-    .replace(/[\s]+/g, "-")
-    // Strip characters that are genuinely unsafe/ambiguous in a URL path segment.
-    .replace(/[?#/\\'"<>«»]+/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-
-  const suffix = Math.random().toString(36).slice(2, 8);
-  return base ? `${base}-${suffix}` : suffix;
+export function slugify(_title: string): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).slice(2, 8);
+  return `${timestamp}${random}`;
 }

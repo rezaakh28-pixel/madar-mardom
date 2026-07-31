@@ -9,7 +9,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "کد رهگیری الزامی است." }, { status: 400 });
   }
 
-  const submission = getVoiceSubmissionByCode(code);
+  let submission;
+  try {
+    submission = await getVoiceSubmissionByCode(code);
+  } catch {
+    return NextResponse.json({ error: "اتصال به پایگاه‌داده برقرار نیست." }, { status: 500 });
+  }
+
   if (!submission) {
     return NextResponse.json({ error: "کد رهگیری یافت نشد." }, { status: 404 });
   }

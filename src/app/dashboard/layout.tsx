@@ -37,7 +37,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="flex flex-1">
         <aside className="hidden w-60 shrink-0 border-e border-border bg-background sm:block">
-          <DashboardSidebar role={session.user.role} />
+          <DashboardSidebar role={session.user.role} beatCategorySlugs={session.user.beatCategorySlugs} />
         </aside>
         <main className="flex-1 p-4 sm:p-8">{children}</main>
       </div>

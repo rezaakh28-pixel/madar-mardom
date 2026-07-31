@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/mock-data";
+import { TrustSeal } from "@/components/layout/trust-seal";
 
 const FOOTER_COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string }> }> = [
   {
@@ -48,6 +49,11 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+            {col.title === "قوانین" && (
+              <div className="mt-4">
+                <TrustSeal />
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -6,6 +6,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** Formats a number using Persian (Farsi) digits and separators. */
+/** Converts any Latin digits (0-9) inside a string to Persian digits (۰-۹), leaving everything else untouched. */
+export function toPersianDigits(text: string): string {
+  const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+  return text.replace(/[0-9]/g, (digit) => persianDigits[Number(digit)]!);
+}
+
 export function formatFa(value: number): string {
   return new Intl.NumberFormat("fa-IR").format(value);
 }
@@ -40,12 +46,23 @@ export function readingTime(wordCount: number): number {
   return Math.max(1, Math.round(wordCount / 180));
 }
 
+const IMAGE_LINE_RE = /^!\[([^\]]*)\]\((https?:\/\/[^\s")]+|\/[^\s")]+)\)$/;
+
+function escapeAttr(value: string): string {
+  return value.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 /**
  * Converts plain text (as typed into the reporter's/editor's textarea, with
- * blank-line-separated paragraphs) into safe HTML paragraphs for rendering.
- * Escapes HTML special characters first — article body is now real
- * user-submitted content, not trusted mock data, so this must not allow
- * arbitrary markup/script injection via dangerouslySetInnerHTML.
+ * blank-line-separated paragraphs) into safe HTML for rendering. Escapes
+ * HTML special characters first — article body is real user-submitted
+ * content, not trusted mock data, so this must not allow arbitrary
+ * markup/script injection via dangerouslySetInnerHTML.
+ *
+ * A paragraph containing only `![alt](url)` (inserted by the "insert image"
+ * button in the reporter's editor — see components/dashboard/article-form.tsx)
+ * renders as an inline image instead of a text paragraph. Only http(s) and
+ * site-relative URLs are allowed.
  */
 export function textToSafeHtml(text: string): string {
   const escaped = text
@@ -57,6 +74,13 @@ export function textToSafeHtml(text: string): string {
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br />")}</p>`)
+    .map((paragraph) => {
+      const imageMatch = paragraph.match(IMAGE_LINE_RE);
+      if (imageMatch) {
+        const [, alt, url] = imageMatch;
+        return `<img src="${escapeAttr(url!)}" alt="${escapeAttr(alt ?? "")}" loading="lazy" class="w-full rounded-lg" />`;
+      }
+      return `<p>${paragraph.replace(/\n/g, "<br />")}</p>`;
+    })
     .join("");
 }

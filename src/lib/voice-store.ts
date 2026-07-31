@@ -1,9 +1,8 @@
-import type { VoiceSubmission, VoiceSubmissionKind, CategorySlug } from "@/types";
+import { db } from "@/lib/db";
+import type { VoiceSubmission, VoiceSubmissionKind, VoiceSubmissionStatus, CategorySlug } from "@/types";
 
 // ---------------------------------------------------------------------------
-// In-memory store standing in for the `VoiceSubmission` Prisma model.
-// Swap each function body for a `db.voiceSubmission.*` call once the DB is
-// connected — signatures are designed to match 1:1.
+// Real, database-backed "صدای مردم" (Voice of People) submissions.
 // ---------------------------------------------------------------------------
 
 function generateTrackingCode(): string {
@@ -13,20 +12,33 @@ function generateTrackingCode(): string {
   return code;
 }
 
-const submissions = new Map<string, VoiceSubmission>();
+interface VoiceSubmissionRow {
+  trackingCode: string;
+  kind: string;
+  title: string;
+  description: string;
+  categorySlug: string;
+  location: string | null;
+  fileUrls: string[];
+  status: string;
+  submittedAt: Date;
+  statusNote: string | null;
+}
 
-// Seed a couple of demo entries so the tracking UI has something to show out of the box.
-submissions.set("MM-DEMO12", {
-  trackingCode: "MM-DEMO12",
-  kind: "REPORT",
-  title: "کمبود آب شرب در روستای نمونه",
-  description: "گزارش مردمی درباره قطعی مکرر آب در یکی از روستاهای حاشیه شهر.",
-  category: "provinces",
-  location: "خوزستان",
-  status: "IN_REVIEW",
-  submittedAt: new Date(Date.now() - 3 * 86400_000).toISOString(),
-  statusNote: "گزارش شما توسط دبیر بخش استان‌ها در حال بررسی است.",
-});
+function mapSubmission(row: VoiceSubmissionRow): VoiceSubmission {
+  return {
+    trackingCode: row.trackingCode,
+    kind: row.kind as VoiceSubmissionKind,
+    title: row.title,
+    description: row.description,
+    category: row.categorySlug as CategorySlug,
+    location: row.location ?? undefined,
+    fileUrls: row.fileUrls,
+    status: row.status as VoiceSubmissionStatus,
+    submittedAt: row.submittedAt.toISOString(),
+    statusNote: row.statusNote ?? undefined,
+  };
+}
 
 export interface CreateVoiceSubmissionInput {
   kind: VoiceSubmissionKind;
@@ -37,17 +49,42 @@ export interface CreateVoiceSubmissionInput {
   fileUrls?: string[];
 }
 
-export function createVoiceSubmission(input: CreateVoiceSubmissionInput): VoiceSubmission {
-  const submission: VoiceSubmission = {
-    ...input,
-    trackingCode: generateTrackingCode(),
-    status: "SUBMITTED",
-    submittedAt: new Date().toISOString(),
-  };
-  submissions.set(submission.trackingCode, submission);
-  return submission;
+export async function createVoiceSubmission(input: CreateVoiceSubmissionInput): Promise<VoiceSubmission> {
+  let trackingCode = generateTrackingCode();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const existing = await db.voiceSubmission.findUnique({ where: { trackingCode } });
+    if (!existing) break;
+    trackingCode = generateTrackingCode();
+  }
+
+  const row = await db.voiceSubmission.create({
+    data: {
+      trackingCode,
+      kind: input.kind,
+      title: input.title,
+      description: input.description,
+      categorySlug: input.category,
+      location: input.location,
+      fileUrls: input.fileUrls ?? [],
+    },
+  });
+  return mapSubmission(row);
 }
 
-export function getVoiceSubmissionByCode(code: string): VoiceSubmission | null {
-  return submissions.get(code.trim().toUpperCase()) ?? null;
+export async function getVoiceSubmissionByCode(code: string): Promise<VoiceSubmission | null> {
+  const row = await db.voiceSubmission.findUnique({ where: { trackingCode: code.trim().toUpperCase() } });
+  return row ? mapSubmission(row) : null;
+}
+
+/** Admin/editor moderation list — returns raw rows (with real `id`s) rather than the public shape. */
+export async function listVoiceSubmissions() {
+  return db.voiceSubmission.findMany({ orderBy: { submittedAt: "desc" } });
+}
+
+export async function updateVoiceSubmissionStatus(
+  id: string,
+  status: "IN_REVIEW" | "PUBLISHED" | "REJECTED",
+  note?: string
+) {
+  return db.voiceSubmission.update({ where: { id }, data: { status, statusNote: note || null } });
 }

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { CATEGORIES, SPECIAL_CASES } from "@/lib/mock-data";
+import { CATEGORIES } from "@/lib/mock-data";
 import { db } from "@/lib/db";
 import { SITE_URL } from "@/lib/seo";
 
@@ -19,22 +19,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const specialCaseRoutes: MetadataRoute.Sitemap = SPECIAL_CASES.map((sc) => ({
-    url: `${SITE_URL}/special-cases/${sc.slug}`,
-    changeFrequency: "daily",
-    priority: 0.6,
-  }));
-
   let articleRoutes: MetadataRoute.Sitemap = [];
   let authorRoutes: MetadataRoute.Sitemap = [];
+  let specialCaseRoutes: MetadataRoute.Sitemap = [];
 
   try {
-    const [articles, authors] = await Promise.all([
+    const [articles, authors, specialCases] = await Promise.all([
       db.article.findMany({
         where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
         select: { slug: true, updatedAt: true },
       }),
       db.user.findMany({ where: { approvalStatus: "APPROVED" }, select: { username: true } }),
+      db.specialCase.findMany({ select: { slug: true, updatedAt: true } }),
     ]);
 
     articleRoutes = articles.map((a) => ({
@@ -48,6 +44,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/author/${a.username}`,
       changeFrequency: "weekly",
       priority: 0.4,
+    }));
+
+    specialCaseRoutes = specialCases.map((sc) => ({
+      url: `${SITE_URL}/special-cases/${sc.slug}`,
+      lastModified: sc.updatedAt,
+      changeFrequency: "daily",
+      priority: 0.6,
     }));
   } catch {
     // Database not connected yet — sitemap still returns the static routes above.

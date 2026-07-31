@@ -11,21 +11,39 @@ export async function approveReporterAction(userId: string) {
   const admin = await requireRole("ADMIN");
   await db.user.update({ where: { id: userId }, data: { approvalStatus: "APPROVED", isActive: true } });
   logger.audit("reporter_approved", admin.user.id, { userId });
-  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/reporters");
 }
 
 export async function rejectReporterAction(userId: string) {
   const admin = await requireRole("ADMIN");
   await db.user.update({ where: { id: userId }, data: { approvalStatus: "REJECTED", isActive: false } });
   logger.audit("reporter_rejected", admin.user.id, { userId });
-  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/reporters");
 }
 
 export async function toggleUserActiveAction(userId: string, isActive: boolean) {
   const admin = await requireRole("ADMIN");
   await db.user.update({ where: { id: userId }, data: { isActive } });
   logger.audit("user_active_toggled", admin.user.id, { userId, isActive });
-  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/reporters");
+}
+
+export async function deleteReporterAction(userId: string): Promise<{ ok: boolean; error?: string }> {
+  const admin = await requireRole("ADMIN");
+  try {
+    const { count } = await db.user.deleteMany({ where: { id: userId, role: "REPORTER" } });
+    if (count > 0) {
+      logger.audit("reporter_deleted", admin.user.id, { userId });
+      revalidatePath("/dashboard/admin/reporters");
+    }
+    return { ok: count > 0 };
+  } catch (err) {
+    logger.error("reporter_delete_failed", { message: err instanceof Error ? err.message : String(err) });
+    return {
+      ok: false,
+      error: "حذف با خطا مواجه شد — این کاربر خبرهایی در سایت دارد. می‌توانید به‌جای حذف، غیرفعالش کنید.",
+    };
+  }
 }
 
 const editorBaseSchema = {
@@ -90,7 +108,7 @@ export async function createEditorAction(
   });
 
   logger.audit("editor_created", admin.user.id, { username, beatCategorySlugs });
-  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/editors");
   return { success: true };
 }
 
@@ -149,16 +167,24 @@ export async function updateEditorAction(
   }
 
   logger.audit("editor_updated", admin.user.id, { userId, beatCategorySlugs });
-  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/editors");
   return { success: true };
 }
 
-export async function deleteEditorAction(userId: string) {
+export async function deleteEditorAction(userId: string): Promise<{ ok: boolean; error?: string }> {
   const admin = await requireRole("ADMIN");
-  const { count } = await db.user.deleteMany({ where: { id: userId, role: "EDITOR" } });
-  if (count > 0) {
-    logger.audit("editor_deleted", admin.user.id, { userId });
-    revalidatePath("/dashboard/admin");
+  try {
+    const { count } = await db.user.deleteMany({ where: { id: userId, role: "EDITOR" } });
+    if (count > 0) {
+      logger.audit("editor_deleted", admin.user.id, { userId });
+      revalidatePath("/dashboard/admin/editors");
+    }
+    return { ok: count > 0 };
+  } catch (err) {
+    logger.error("editor_delete_failed", { message: err instanceof Error ? err.message : String(err) });
+    return {
+      ok: false,
+      error: "حذف با خطا مواجه شد — این کاربر ممکن است به محتوای دیگری مرتبط باشد. می‌توانید به‌جای حذف، غیرفعالش کنید.",
+    };
   }
-  return { ok: count > 0 };
 }

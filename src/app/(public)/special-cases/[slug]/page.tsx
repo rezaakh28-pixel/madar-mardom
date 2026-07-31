@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticleCard } from "@/components/news/article-card";
-import { SPECIAL_CASES, getSpecialCaseBySlug } from "@/lib/mock-data";
+import { getSpecialCaseBySlugPublic } from "@/lib/content";
 import { buildPageMetadata } from "@/lib/seo";
 import { formatJalali } from "@/lib/utils";
 
@@ -12,13 +12,9 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return SPECIAL_CASES.map((sc) => ({ slug: sc.slug }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const specialCase = getSpecialCaseBySlug(slug);
+  const specialCase = await getSpecialCaseBySlugPublic(slug).catch(() => null);
   if (!specialCase) return {};
   return buildPageMetadata({
     title: specialCase.title,
@@ -29,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SpecialCasePage({ params }: PageProps) {
   const { slug } = await params;
-  const specialCase = getSpecialCaseBySlug(slug);
+  const specialCase = await getSpecialCaseBySlugPublic(slug).catch(() => null);
   if (!specialCase) notFound();
 
   const nonEmptySections = specialCase.sections.filter((s) => s.articles.length > 0);

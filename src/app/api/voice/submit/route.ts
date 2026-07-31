@@ -27,16 +27,21 @@ export async function POST(request: Request) {
 
   // TODO: verify parsed.data.captchaToken with the real captcha provider before proceeding.
 
-  const submission = createVoiceSubmission({
-    kind: parsed.data.kind,
-    title: parsed.data.title,
-    description: parsed.data.description,
-    category: parsed.data.category as never,
-    location: parsed.data.location,
-    fileUrls: parsed.data.fileUrls,
-  });
+  try {
+    const submission = await createVoiceSubmission({
+      kind: parsed.data.kind,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      category: parsed.data.category as never,
+      location: parsed.data.location,
+      fileUrls: parsed.data.fileUrls,
+    });
 
-  logger.audit("voice_submission_created", "anonymous", { trackingCode: submission.trackingCode });
+    logger.audit("voice_submission_created", "anonymous", { trackingCode: submission.trackingCode });
 
-  return NextResponse.json({ trackingCode: submission.trackingCode }, { status: 201 });
+    return NextResponse.json({ trackingCode: submission.trackingCode }, { status: 201 });
+  } catch (err) {
+    logger.error("voice_submission_failed", { message: err instanceof Error ? err.message : String(err) });
+    return NextResponse.json({ error: "ارسال گزارش با خطا مواجه شد. لطفاً بعداً دوباره تلاش کنید." }, { status: 500 });
+  }
 }

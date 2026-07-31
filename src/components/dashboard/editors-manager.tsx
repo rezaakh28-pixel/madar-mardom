@@ -66,18 +66,22 @@ export function EditorsManager({ editors: initialEditors }: { editors: User[] })
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = React.useState<string | null>(null);
   const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
 
   React.useEffect(() => setEditors(initialEditors), [initialEditors]);
 
   async function handleDelete(editor: User) {
     if (confirmingDeleteId !== editor.id) {
       setConfirmingDeleteId(editor.id);
+      setDeleteError(null);
       return;
     }
     setBusyId(editor.id);
     const result = await deleteEditorAction(editor.id);
     if (result.ok) {
       setEditors((prev) => prev.filter((e) => e.id !== editor.id));
+    } else {
+      setDeleteError(result.error ?? "حذف با خطا مواجه شد.");
     }
     setBusyId(null);
     setConfirmingDeleteId(null);
@@ -93,6 +97,11 @@ export function EditorsManager({ editors: initialEditors }: { editors: User[] })
 
   return (
     <div className="flex flex-col gap-3">
+      {deleteError && (
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          {deleteError}
+        </p>
+      )}
       {editors.map((editor) => (
         <div key={editor.id} className="rounded-lg border border-border bg-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">

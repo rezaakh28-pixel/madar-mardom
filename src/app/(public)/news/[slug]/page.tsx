@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Clock } from "lucide-react";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
@@ -119,9 +120,11 @@ export default async function ArticlePage({ params }: PageProps) {
 
       <div className="mt-8 flex flex-wrap gap-2">
         {article.tags.map((tag) => (
-          <Badge key={tag} variant="outline">
-            #{tag}
-          </Badge>
+          <Link key={tag} href={`/tag/${tag}`}>
+            <Badge variant="outline" className="hover:border-primary hover:text-primary">
+              #{tag}
+            </Badge>
+          </Link>
         ))}
       </div>
 

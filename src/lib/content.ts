@@ -4,7 +4,7 @@ import { readingTime } from "@/lib/utils";
 import { ROLE_LABELS_FA } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
 import type { Article, User } from "@prisma/client";
-import type { Author, Category, MediaAsset, NewsArticle, SiteStats } from "@/types";
+import type { Author, Category, MediaAsset, NewsArticle, SiteStats, SpecialCase } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Real content layer — replaces the article/author functions that used to
@@ -260,6 +260,169 @@ export async function rejectArticle(articleId: string, note?: string) {
   });
 }
 
+export async function getArticlesByTag(tag: string, limit?: number): Promise<NewsArticle[]> {
+  const articles = await db.article.findMany({
+    where: { ...PUBLISHED_WHERE, tags: { has: tag } },
+    include: { author: true },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+  });
+  return articles.map(mapArticle);
+}
+
+export async function getReporterArticles(authorId: string) {
+  return db.article.findMany({
+    where: { authorId, status: { in: ["DRAFT", "PENDING_REVIEW", "REJECTED"] } },
+    include: { author: true },
+    orderBy: { updatedAt: "desc" },
+  });
+}
+
+export async function getArticleForOwner(articleId: string, authorId: string) {
+  const article = await db.article.findUnique({ where: { id: articleId }, include: { author: true } });
+  if (!article || article.authorId !== authorId) return null;
+  return article;
+}
+
+// -- Featured article ("خبر ویژه") -------------------------------------------
+
+export async function setFeaturedArticle(articleId: string) {
+  await db.$transaction([
+    db.article.updateMany({ where: { isFeatured: true }, data: { isFeatured: false } }),
+    db.article.update({ where: { id: articleId }, data: { isFeatured: true } }),
+  ]);
+}
+
+export async function clearFeaturedArticle() {
+  await db.article.updateMany({ where: { isFeatured: true }, data: { isFeatured: false } });
+}
+
+// -- All published articles (admin/editor management) -----------------------
+
+export async function getAllPublishedArticles() {
+  return db.article.findMany({
+    where: { status: "PUBLISHED" },
+    include: { author: true },
+    orderBy: { publishedAt: "desc" },
+  });
+}
+
+export async function deleteArticle(articleId: string) {
+  return db.article.delete({ where: { id: articleId } });
+}
+
+// -- "پرونده‌های ویژه" (Special Cases) ----------------------------------------
+
+export async function listSpecialCases() {
+  return db.specialCase.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { articles: true } } },
+  });
+}
+
+export interface CreateSpecialCaseInput {
+  title: string;
+  summary: string;
+  coverImageUrl?: string;
+}
+
+export async function createSpecialCase(input: CreateSpecialCaseInput) {
+  return db.specialCase.create({
+    data: {
+      slug: slugify(input.title),
+      title: input.title,
+      summary: input.summary,
+      coverImageUrl: input.coverImageUrl || null,
+    },
+  });
+}
+
+export async function updateSpecialCase(id: string, input: CreateSpecialCaseInput) {
+  return db.specialCase.update({
+    where: { id },
+    data: { title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl || null },
+  });
+}
+
+export async function deleteSpecialCase(id: string) {
+  await db.article.updateMany({ where: { specialCaseId: id }, data: { specialCaseId: null } });
+  return db.specialCase.delete({ where: { id } });
+}
+
+export async function assignArticleToSpecialCase(articleId: string, specialCaseId: string | null) {
+  return db.article.update({ where: { id: articleId }, data: { specialCaseId } });
+}
+
+export async function getSpecialCaseWithArticles(specialCaseId: string) {
+  return db.specialCase.findUnique({
+    where: { id: specialCaseId },
+    include: { articles: { include: { author: true }, orderBy: { publishedAt: "desc" } } },
+  });
+}
+
+/** Public special-case page — groups the case's published articles by kind. */
+export async function getSpecialCaseBySlugPublic(slug: string): Promise<SpecialCase | null> {
+  const record = await db.specialCase.findUnique({
+    where: { slug },
+    include: {
+      articles: {
+        where: PUBLISHED_WHERE,
+        include: { author: true },
+        orderBy: { publishedAt: "desc" },
+      },
+    },
+  });
+  if (!record) return null;
+
+  const mapped = record.articles.map(mapArticle);
+  const sections: SpecialCase["sections"] = (
+    ["NEWS", "ANALYSIS", "REPORT", "DATA", "VIDEO", "INFOGRAPHIC"] as const
+  )
+    .map((kind) => ({
+      kind,
+      label: KIND_LABEL_FA[kind],
+      articles: mapped.filter((a) => a.kind === kind),
+    }))
+    .filter((section) => section.articles.length > 0);
+
+  return {
+    slug: record.slug,
+    title: record.title,
+    summary: record.summary,
+    coverImage: {
+      url: record.coverImageUrl || "/covers/placeholder.jpg",
+      alt: record.title,
+      width: 1600,
+      height: 900,
+    },
+    startedAt: record.createdAt.toISOString(),
+    sections,
+  };
+}
+
+const KIND_LABEL_FA: Record<string, string> = {
+  NEWS: "اخبار",
+  ANALYSIS: "تحلیل",
+  NOTE: "یادداشت",
+  REPORT: "گزارش",
+  DATA: "داده",
+  VIDEO: "ویدیو",
+  PODCAST: "پادکست",
+  INFOGRAPHIC: "اینفوگرافیک",
+};
+
+// -- Reporter activity (admin panel) -----------------------------------------
+
+export async function getReporterActivity(authorId: string) {
+  const [draftCount, pendingCount, publishedCount, rejectedCount] = await Promise.all([
+    db.article.count({ where: { authorId, status: "DRAFT" } }),
+    db.article.count({ where: { authorId, status: "PENDING_REVIEW" } }),
+    db.article.count({ where: { authorId, status: "PUBLISHED" } }),
+    db.article.count({ where: { authorId, status: "REJECTED" } }),
+  ]);
+  return { draftCount, pendingCount, publishedCount, rejectedCount };
+}
+
 // -- Site-wide stats (admin panel) -------------------------------------------
 
 export async function getSiteStats(): Promise<SiteStats> {
@@ -277,5 +440,64 @@ export async function getSiteStats(): Promise<SiteStats> {
     publishedThisWeek,
     pendingReview,
     totalViews: viewsAgg._sum.viewCount ?? 0,
+  };
+}
+
+/** Full stats breakdown for the admin's dedicated stats page. */
+export async function getDetailedSiteStats() {
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000);
+
+  const [
+    totalPublished,
+    publishedThisWeek,
+    totalDrafts,
+    pendingReview,
+    totalRejected,
+    viewsAgg,
+    totalReporters,
+    activeReporters,
+    pendingReporterApprovals,
+    totalEditors,
+    totalVoiceSubmissions,
+    pendingVoiceSubmissions,
+    totalContactMessages,
+    unreadContactMessages,
+    categoryBreakdown,
+  ] = await Promise.all([
+    db.article.count({ where: { status: "PUBLISHED" } }),
+    db.article.count({ where: { status: "PUBLISHED", publishedAt: { gte: weekAgo } } }),
+    db.article.count({ where: { status: "DRAFT" } }),
+    db.article.count({ where: { status: "PENDING_REVIEW" } }),
+    db.article.count({ where: { status: "REJECTED" } }),
+    db.article.aggregate({ _sum: { viewCount: true }, where: { status: "PUBLISHED" } }),
+    db.user.count({ where: { role: "REPORTER" } }),
+    db.user.count({ where: { role: "REPORTER", isActive: true, approvalStatus: "APPROVED" } }),
+    db.user.count({ where: { role: "REPORTER", approvalStatus: "PENDING" } }),
+    db.user.count({ where: { role: "EDITOR" } }),
+    db.voiceSubmission.count(),
+    db.voiceSubmission.count({ where: { status: "SUBMITTED" } }),
+    db.contactMessage.count(),
+    db.contactMessage.count({ where: { status: "UNREAD" } }),
+    db.article.groupBy({ by: ["categorySlug"], where: { status: "PUBLISHED" }, _count: true }),
+  ]);
+
+  return {
+    totalPublished,
+    publishedThisWeek,
+    totalDrafts,
+    pendingReview,
+    totalRejected,
+    totalViews: viewsAgg._sum.viewCount ?? 0,
+    totalReporters,
+    activeReporters,
+    pendingReporterApprovals,
+    totalEditors,
+    totalVoiceSubmissions,
+    pendingVoiceSubmissions,
+    totalContactMessages,
+    unreadContactMessages,
+    categoryBreakdown: categoryBreakdown
+      .map((c) => ({ slug: c.categorySlug, count: c._count }))
+      .sort((a, b) => b.count - a.count),
   };
 }

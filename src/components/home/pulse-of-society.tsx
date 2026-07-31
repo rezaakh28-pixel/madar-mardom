@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import type { PulseItem } from "@/types";
-import { cn, timeAgoFa } from "@/lib/utils";
+import { cn, timeAgoFa, toPersianDigits, formatFa } from "@/lib/utils";
 
 function Sparkline({ values, trend }: { values: number[]; trend: PulseItem["trend"] }) {
   if (values.length < 2) return null;
@@ -38,15 +38,15 @@ function PulseCard({ item }: { item: PulseItem }) {
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted-foreground">{item.label}</span>
         {typeof item.changePercent === "number" && (
-          <span className={cn("flex items-center gap-0.5 text-xs font-semibold font-numeral", trendColor)}>
+          <span className={cn("flex items-center gap-0.5 text-[11px] font-semibold", trendColor)}>
             <TrendIcon trend={item.trend} />
-            {Math.abs(item.changePercent)}٪
+            {formatFa(Math.abs(item.changePercent))}٪
           </span>
         )}
       </div>
 
       <div className="flex items-baseline gap-1">
-        <span className="font-numeral text-xl font-extrabold text-foreground sm:text-2xl">{item.value}</span>
+        <span className="text-base font-extrabold text-foreground sm:text-lg">{toPersianDigits(item.value)}</span>
         {item.unit && <span className="text-xs text-muted-foreground">{item.unit}</span>}
       </div>
 

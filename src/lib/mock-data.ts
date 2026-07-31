@@ -1,9 +1,9 @@
-import type { Category, SpecialCase } from "@/types";
+import type { Category } from "@/types";
 
 // ---------------------------------------------------------------------------
 // The only genuinely static content left: the fixed list of site sections.
-// Everything else (articles, authors, pulse data, users) is real,
-// database-backed content now — see src/lib/content.ts, src/lib/pulse.ts,
+// Everything else (articles, authors, pulse data, special cases, users) is
+// real, database-backed content now — see src/lib/content.ts, src/lib/pulse.ts,
 // and src/lib/session.ts.
 // ---------------------------------------------------------------------------
 
@@ -26,13 +26,4 @@ export const CATEGORIES: Category[] = [
 
 export function getCategoryBySlug(slug: string): Category | undefined {
   return CATEGORIES.find((c) => c.slug === slug);
-}
-
-// "پرونده‌های ویژه" (Special Cases) isn't part of the real content migration
-// yet — starts empty rather than showing placeholder articles. The pages
-// that read this already handle an empty list gracefully.
-export const SPECIAL_CASES: SpecialCase[] = [];
-
-export function getSpecialCaseBySlug(slug: string): SpecialCase | undefined {
-  return SPECIAL_CASES.find((s) => s.slug === slug);
 }

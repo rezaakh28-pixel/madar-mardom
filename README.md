@@ -22,7 +22,7 @@ npx prisma db seed
 npm run dev
 ```
 
-Public content (articles, authors, pulse data) is fully functional against typed mock data (`src/lib/mock-data.ts`) with **no database required**. **Accounts and login are real** and require a connected Postgres database — see "Authentication" below.
+Every piece of content (articles, accounts, Pulse of Society, special cases, contact messages, Voice of People) is real and database-backed — only the fixed category list is static. This means **the site needs a connected Postgres database to do anything beyond render an empty shell** — see "Authentication" below for setup, and re-run `npx prisma db push` any time you pull schema changes.
 
 ## Stack
 
@@ -36,17 +36,13 @@ Public content (articles, authors, pulse data) is fully functional against typed
 
 ## Content workflow
 
-Articles are real, database-backed content now (`Article` model in `prisma/schema.prisma`), with a full reporter → editor → public pipeline:
+Articles are real, database-backed content (`Article` model in `prisma/schema.prisma`), with a full reporter → editor → public pipeline:
 
-1. **Reporter** writes an article in `/dashboard/reporter` and either saves it as a draft or sends it for review (`saveArticleAction` in `src/app/dashboard/reporter/actions.ts` — creates a real `Article` row with status `PENDING_REVIEW`).
-2. **Editor** sees it immediately in `/dashboard/editor` — filtered to their assigned beat(s) (an editor can be assigned multiple sections from the admin panel). From there they can:
-   - **Edit** the title/deck/lead/body/category before publishing.
-   - **انتشار فوری (Publish now)** — goes live immediately.
-   - **زمان‌بندی انتشار (Schedule)** — pick a date/time with the Jalali (Persian calendar) picker; the article publishes itself automatically once that time passes (public queries only return articles whose `publishedAt` is in the past — no cron job needed).
-   - **رد کردن (Reject)**.
-3. **Public site** reads only `PUBLISHED` articles whose `publishedAt` has passed (`src/lib/content.ts`), across the home page, category pages, the article page (which also increments a real view counter), and the author page.
+1. **Reporter** writes an article in `/dashboard/reporter` — including inline images (an "درج تصویر در متن" button uploads and inserts `![alt](url)` at the cursor, rendered as a real `<img>` on the article page) and up to 3 hashtags (each becomes a clickable `/tag/[tag]` browse page). Saves as a draft or sends for review. Drafts live in `/dashboard/reporter/drafts` — editable, deletable, or resubmittable from there.
+2. **Editor** sees it in `/dashboard/editor`, filtered to their assigned beat(s) (an editor can cover multiple sections). From there: **edit** content, **انتشار فوری** (publish now), **زمان‌بندی انتشار** (schedule with a Jalali/Persian-calendar picker — the article publishes itself once that time passes, no cron job needed), or **رد کردن** (reject).
+3. **Public site** reads only published, non-scheduled-for-later articles (`src/lib/content.ts`) — home page, category pages, tag pages, the article page (real view counter), and author pages.
 
-An editor assigned the "اقتصاد" (economy) beat also gets a **ویرایش نبض جامعه** section in their panel to update the Pulse of Society numbers — the same form the admin panel uses (`src/components/dashboard/pulse-edit-form.tsx`).
+Both the admin and editor panels are split into focused sub-pages (see the sidebar): reviewing/editing news, صدای مردم (Voice of People moderation), خبر ویژه (pick the homepage's featured story), پرونده‌های ویژه (group articles into a themed collection), همه اخبار (edit/delete any published article), and — admin only — site-wide stats, reporter/editor account management, and تماس با ما (contact form submissions). An editor whose beat includes "اقتصاد" also gets a نبض جامعه page to update the Pulse of Society numbers.
 
 ## Authentication
 
@@ -147,11 +143,12 @@ Brand tokens live in `tailwind.config.ts` (`navy`, `orange`, `surface`, `ink`) a
 |---|---|---|
 | Content (articles) | **Real** — reporters submit, editors review/edit/publish, public pages read from the database. See "Content workflow" below. | `src/lib/content.ts` |
 | "نبض جامعه" (Pulse of Society) | **Real** — editable from the admin panel, or by an editor whose beat includes "economy". Starts as placeholders ("—") until someone fills in real numbers. | `src/lib/pulse.ts` |
+| پرونده‌های ویژه (Special Cases) | **Real** — create one and assign published articles to it from the admin/editor panel. | `src/lib/content.ts` (special case functions) |
+| تماس با ما (Contact form) | **Real** — submissions save to the database and show up in `/dashboard/admin/contact`. | `src/lib/contact.ts` |
+| صدای مردم (Voice of People) | **Real** — submissions save to the database and are moderated (approve/reject) from `/dashboard/admin/voice` or `/dashboard/editor/voice`. | `src/lib/voice-store.ts` |
 | Categories (site sections) | Fixed, curated list — not database content, deliberately | `src/lib/mock-data.ts` (`CATEGORIES`) |
-| پرونده‌های ویژه (Special Cases) | Not migrated yet — starts empty | `src/lib/mock-data.ts` (`SPECIAL_CASES`) |
 | Accounts, login, registration, RBAC | **Real** — Postgres-backed, bcrypt-hashed passwords, signed session cookies. See "Authentication" above. | Optional upgrade path to NextAuth is noted in comments in `src/lib/session.ts` if you outgrow this |
-| AI features (summarize, suggest title/tags/category, TTS, dedupe, SEO gen) | Deterministic stubs with real function signatures | `src/lib/ai.ts` — swap each function body for a real model call |
-| Voice of People submissions | In-memory store (`src/lib/voice-store.ts`) | Swap for `db.voiceSubmission.*` once you want these persisted long-term |
+| AI features (summarize, suggest title/tags/category, TTS, dedupe, SEO gen) | Deterministic stubs with real function signatures (dedupe/related-articles check against the real database) | `src/lib/ai.ts` — swap each function body for a real model call |
 | Captcha | Visual placeholder checkbox | Wire a real widget (e.g. Cloudflare Turnstile) in `submission-form.tsx` + verify the token server-side in `api/voice/submit/route.ts` |
 | Image / file uploads | **Real** — `src/app/api/upload/route.ts` uploads to Vercel Blob | One-time setup on Vercel: **Storage tab → Create Database → Blob → Connect to Project** (auto-adds `BLOB_READ_WRITE_TOKEN` and redeploys) |
 
