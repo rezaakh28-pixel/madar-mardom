@@ -25,7 +25,20 @@ export default async function EditorVoicePage() {
           اتصال به پایگاه‌داده برقرار نیست.
         </p>
       ) : (
-        <VoiceModerationQueue items={pending} />
+        <VoiceModerationQueue
+          items={pending.map((s) => ({
+            id: s.id,
+            trackingCode: s.trackingCode,
+            kind: s.kind,
+            title: s.title,
+            description: s.description,
+            categorySlug: s.categorySlug,
+            location: s.location,
+            fileUrls: s.fileUrls,
+            status: s.status,
+            submittedAt: s.submittedAt.toISOString(),
+          }))}
+        />
       )}
     </div>
   );
