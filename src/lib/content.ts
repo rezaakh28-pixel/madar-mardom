@@ -4,7 +4,7 @@ import { readingTime } from "@/lib/utils";
 import { ROLE_LABELS_FA } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
 import type { Article, User } from "@prisma/client";
-import type { Author, Category, MediaAsset, NewsArticle, SiteStats, SpecialCase } from "@/types";
+import type { Author, Category, MediaAsset, NewsArticle, SiteStats, SpecialCase, ArticleKind } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Real content layer — replaces the article/author functions that used to
@@ -400,7 +400,7 @@ export async function getSpecialCaseBySlugPublic(slug: string): Promise<SpecialC
   };
 }
 
-const KIND_LABEL_FA: Record<string, string> = {
+const KIND_LABEL_FA: Record<ArticleKind, string> = {
   NEWS: "اخبار",
   ANALYSIS: "تحلیل",
   NOTE: "یادداشت",
