@@ -12,6 +12,11 @@ import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
 import { SITE_URL, buildArticleMetadata, articleJsonLd } from "@/lib/seo";
 import { formatFa, formatJalali, textToSafeHtml } from "@/lib/utils";
 
+// Overrides the 60s cache set in the public layout: this page increments a
+// real view counter on every visit, so it needs to actually run on every
+// request rather than serve a cached copy.
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
