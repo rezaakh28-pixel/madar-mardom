@@ -32,6 +32,8 @@ export default async function EditDraftPage({ params }: PageProps) {
             category: article.categorySlug,
             tags: article.tags,
             coverImageUrl: article.coverImageUrl ?? undefined,
+            coverImageOrientation: article.coverImageOrientation === "portrait" ? "portrait" : "landscape",
+            coverImagePosition: article.coverImagePosition ?? undefined,
           }}
         />
       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/mock-data";
 import { TrustSeal } from "@/components/layout/trust-seal";
+import { SocialLinksRow } from "@/components/layout/social-links-row";
 
 const FOOTER_COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string }> }> = [
   {
@@ -35,6 +36,7 @@ export function Footer() {
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-primary-foreground/70">
             خبر از دل جامعه — رسانه‌ای مستقل و مردمی برای روایت زندگی، اقتصاد و مسائل روزمره ایران.
           </p>
+          <SocialLinksRow className="mt-4 flex flex-wrap gap-2" />
         </div>
 
         {FOOTER_COLUMNS.map((col) => (

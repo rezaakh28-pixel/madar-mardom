@@ -64,6 +64,8 @@ export interface MediaAsset {
   caption?: string;
   width: number;
   height: number;
+  /** CSS object-position value (e.g. "center", "top", "20% 80%") — which part of the image stays visible when cropped. */
+  objectPosition?: string;
 }
 
 export interface NewsArticle {
@@ -78,6 +80,8 @@ export interface NewsArticle {
   body: string; // HTML or Markdown body
 
   coverImage: MediaAsset;
+  /** "landscape" | "portrait" — controls the aspect ratio the cover image displays at. */
+  coverOrientation: "landscape" | "portrait";
   gallery?: MediaAsset[];
   videoUrl?: string;
   audioUrl?: string;
@@ -95,6 +99,7 @@ export interface NewsArticle {
 
   viewCount: number;
   isFeatured?: boolean;
+  isCitizenReport?: boolean;
 
   relatedSlugs?: string[];
 

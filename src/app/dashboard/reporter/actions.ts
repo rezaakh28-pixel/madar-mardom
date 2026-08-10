@@ -41,6 +41,8 @@ export interface SaveArticleInput {
   category: string;
   tags: string[];
   coverImageUrl?: string;
+  coverImageOrientation?: "landscape" | "portrait";
+  coverImagePosition?: string;
   action: "draft" | "submit";
 }
 
@@ -66,6 +68,8 @@ export async function saveArticleAction(input: SaveArticleInput): Promise<SaveAr
       categorySlug: input.category,
       tags: input.tags,
       coverImageUrl: input.coverImageUrl,
+      coverImageOrientation: input.coverImageOrientation,
+      coverImagePosition: input.coverImagePosition,
       status: input.action === "draft" ? "DRAFT" : "PENDING_REVIEW",
     });
 
@@ -86,6 +90,8 @@ export interface UpdateDraftInput {
   category: string;
   tags: string[];
   coverImageUrl?: string;
+  coverImageOrientation?: "landscape" | "portrait";
+  coverImagePosition?: string;
   action: "draft" | "submit";
 }
 
@@ -109,6 +115,8 @@ export async function updateDraftAction(articleId: string, input: UpdateDraftInp
       categorySlug: input.category,
       tags: input.tags,
       coverImageUrl: input.coverImageUrl,
+      coverImageOrientation: input.coverImageOrientation,
+      coverImagePosition: input.coverImagePosition,
     });
     await db.article.update({
       where: { id: articleId },

@@ -7,6 +7,7 @@ import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { ShareButtons } from "@/components/news/share-buttons";
 import { RelatedArticles } from "@/components/news/related-articles";
 import { AuthorCard } from "@/components/news/author-card";
+import { VideoEmbed } from "@/components/news/video-embed";
 import { Badge } from "@/components/ui/badge";
 import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
 import { SITE_URL, buildArticleMetadata, articleJsonLd } from "@/lib/seo";
@@ -79,7 +80,9 @@ export default async function ArticlePage({ params }: PageProps) {
         </div>
       </header>
 
-      <div className="relative mb-6 aspect-[16/9] w-full overflow-hidden rounded-lg">
+      <div
+        className={`relative mb-6 w-full overflow-hidden rounded-lg ${article.coverOrientation === "portrait" ? "mx-auto aspect-[4/5] max-w-md" : "aspect-[16/9]"}`}
+      >
         <Image
           src={article.coverImage.url}
           alt={article.coverImage.alt}
@@ -87,6 +90,7 @@ export default async function ArticlePage({ params }: PageProps) {
           priority
           sizes="(min-width: 1024px) 768px, 100vw"
           className="object-cover"
+          style={{ objectPosition: article.coverImage.objectPosition || "center" }}
         />
       </div>
       {article.coverImage.caption && (
@@ -94,8 +98,8 @@ export default async function ArticlePage({ params }: PageProps) {
       )}
 
       {article.videoUrl && (
-        <div className="mb-8 aspect-video w-full overflow-hidden rounded-lg bg-navy-900">
-          <video controls className="h-full w-full" src={article.videoUrl} />
+        <div className="mb-8">
+          <VideoEmbed url={article.videoUrl} title={article.title} />
         </div>
       )}
 
@@ -125,7 +129,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
       <div className="mt-8 flex flex-wrap gap-2">
         {article.tags.map((tag) => (
-          <Link key={tag} href={`/tag/${tag}`}>
+          <Link key={tag} href={`/tag/${encodeURIComponent(tag)}`}>
             <Badge variant="outline" className="hover:border-primary hover:text-primary">
               #{tag}
             </Badge>

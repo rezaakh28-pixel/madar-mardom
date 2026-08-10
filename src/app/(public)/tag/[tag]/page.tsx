@@ -8,17 +8,33 @@ interface PageProps {
   params: Promise<{ tag: string }>;
 }
 
+/**
+ * Next.js normally auto-decodes dynamic route params, but Persian text in
+ * URLs has proven unreliable across client-side navigation vs. full page
+ * loads (see the article-slug 404 fix) — decode defensively so this works
+ * either way, without crashing on a param that's already decoded.
+ */
+function resolveTag(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { tag } = await params;
+  const { tag: rawTag } = await params;
+  const tag = resolveTag(rawTag);
   return buildPageMetadata({
     title: `برچسب #${tag}`,
     description: `اخبار مدار مردم با برچسب ${tag}.`,
-    path: `/tag/${tag}`,
+    path: `/tag/${encodeURIComponent(tag)}`,
   });
 }
 
 export default async function TagPage({ params }: PageProps) {
-  const { tag } = await params;
+  const { tag: rawTag } = await params;
+  const tag = resolveTag(rawTag);
 
   let articles: Awaited<ReturnType<typeof getArticlesByTag>> = [];
   let dbError = false;
@@ -30,7 +46,7 @@ export default async function TagPage({ params }: PageProps) {
 
   return (
     <div className="container-page py-8">
-      <Breadcrumb items={[{ label: `#${tag}`, href: `/tag/${tag}` }]} />
+      <Breadcrumb items={[{ label: `#${tag}`, href: `/tag/${encodeURIComponent(tag)}` }]} />
 
       <header className="mb-8">
         <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">#{tag}</h1>

@@ -41,6 +41,7 @@ export function ArticleCard({
           fill
           sizes={isHorizontal ? "180px" : "(min-width: 1024px) 33vw, 100vw"}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
+          style={{ objectPosition: article.coverImage.objectPosition || "center" }}
           priority={priority}
         />
         <Badge variant="secondary" className="absolute right-2 top-2">

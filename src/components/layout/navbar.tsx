@@ -97,14 +97,11 @@ export function Navbar() {
         <div className="flex items-center gap-1">
           <div className="hidden items-center sm:flex">
             {searchOpen ? (
-              <form
-                role="search"
-                className="flex items-center gap-1"
-                onSubmit={(e) => e.preventDefault()}
-              >
+              <form role="search" action="/search" className="flex items-center gap-1">
                 <Input
                   autoFocus
                   type="search"
+                  name="q"
                   placeholder="جست‌وجو در مدار مردم…"
                   className="h-9 w-56"
                   aria-label="جست‌وجو"
@@ -146,8 +143,8 @@ export function Navbar() {
       {mobileOpen && (
         <div className="border-t border-border bg-background lg:hidden">
           <div className="container-page flex flex-col gap-1 py-3">
-            <form role="search" className="mb-2 flex items-center gap-1" onSubmit={(e) => e.preventDefault()}>
-              <Input type="search" placeholder="جست‌وجو در مدار مردم…" aria-label="جست‌وجو" />
+            <form role="search" action="/search" className="mb-2 flex items-center gap-1">
+              <Input type="search" name="q" placeholder="جست‌وجو در مدار مردم…" aria-label="جست‌وجو" />
             </form>
             {[...PRIMARY_LINKS, ...MORE_LINKS].map((link) => (
               <Link

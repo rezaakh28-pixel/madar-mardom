@@ -115,4 +115,13 @@
   .container-page {
     @apply container mx-auto;
   }
+
+  /* Inline video embeds inserted into article body text (see lib/utils.ts textToSafeHtml) */
+  .video-embed {
+    @apply relative my-4 aspect-video w-full overflow-hidden rounded-lg bg-navy-900;
+  }
+  .video-embed iframe,
+  .video-embed video {
+    @apply absolute inset-0 h-full w-full border-0;
+  }
 }

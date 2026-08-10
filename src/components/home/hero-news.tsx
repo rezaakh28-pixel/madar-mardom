@@ -18,6 +18,7 @@ export function HeroNews({ article }: { article: NewsArticle }) {
         priority
         sizes="100vw"
         className="object-cover transition-transform duration-500 group-hover:scale-105"
+        style={{ objectPosition: article.coverImage.objectPosition || "center" }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-navy-900/95 via-navy-900/50 to-transparent" />
 

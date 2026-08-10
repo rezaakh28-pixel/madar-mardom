@@ -47,9 +47,32 @@ export function readingTime(wordCount: number): number {
 }
 
 const IMAGE_LINE_RE = /^!\[([^\]]*)\]\((https?:\/\/[^\s")]+|\/[^\s")]+)\)$/;
+const VIDEO_LINE_RE = /^\[video\]\((https?:\/\/[^\s")]+)\)$/i;
 
 function escapeAttr(value: string): string {
   return value.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function extractYouTubeId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/);
+  return match?.[1] ?? null;
+}
+
+function extractAparatHash(url: string): string | null {
+  const match = url.match(/aparat\.com\/v\/([A-Za-z0-9]+)/);
+  return match?.[1] ?? null;
+}
+
+function videoEmbedHtml(url: string): string {
+  const youTubeId = extractYouTubeId(url);
+  if (youTubeId) {
+    return `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${escapeAttr(youTubeId)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  }
+  const aparatHash = extractAparatHash(url);
+  if (aparatHash) {
+    return `<div class="video-embed"><iframe src="https://www.aparat.com/video/video/embed/videohash/${escapeAttr(aparatHash)}/vt/frame" allowfullscreen></iframe></div>`;
+  }
+  return `<div class="video-embed"><video controls src="${escapeAttr(url)}"></video></div>`;
 }
 
 /**
@@ -60,9 +83,10 @@ function escapeAttr(value: string): string {
  * markup/script injection via dangerouslySetInnerHTML.
  *
  * A paragraph containing only `![alt](url)` (inserted by the "insert image"
- * button in the reporter's editor — see components/dashboard/article-form.tsx)
- * renders as an inline image instead of a text paragraph. Only http(s) and
- * site-relative URLs are allowed.
+ * button in the reporter's editor) renders as an inline image, and
+ * `[video](url)` (inserted by "insert video") renders as an embedded
+ * YouTube/Aparat/direct-file player — see components/dashboard/article-form.tsx.
+ * Only http(s) and site-relative URLs are allowed.
  */
 export function textToSafeHtml(text: string): string {
   const escaped = text
@@ -79,6 +103,10 @@ export function textToSafeHtml(text: string): string {
       if (imageMatch) {
         const [, alt, url] = imageMatch;
         return `<img src="${escapeAttr(url!)}" alt="${escapeAttr(alt ?? "")}" loading="lazy" class="w-full rounded-lg" />`;
+      }
+      const videoMatch = paragraph.match(VIDEO_LINE_RE);
+      if (videoMatch) {
+        return videoEmbedHtml(videoMatch[1]!);
       }
       return `<p>${paragraph.replace(/\n/g, "<br />")}</p>`;
     })

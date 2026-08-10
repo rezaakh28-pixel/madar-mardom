@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Save, Send, AlertTriangle, X, ImagePlus } from "lucide-react";
+import { Sparkles, Save, Send, AlertTriangle, X, ImagePlus, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/shared/file-upload";
+import { CoverImagePositionPicker } from "@/components/dashboard/cover-image-position-picker";
 import { CATEGORIES } from "@/lib/mock-data";
 import {
   suggestTitleAction,
@@ -29,6 +30,8 @@ export interface EditableArticle {
   category: string;
   tags: string[];
   coverImageUrl?: string;
+  coverImageOrientation?: "landscape" | "portrait";
+  coverImagePosition?: string;
 }
 
 export function ArticleForm({ initialArticle }: { initialArticle?: EditableArticle }) {
@@ -43,6 +46,10 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
   const [tags, setTags] = React.useState<string[]>(initialArticle?.tags ?? []);
   const [tagInput, setTagInput] = React.useState("");
   const [coverImageUrl, setCoverImageUrl] = React.useState(initialArticle?.coverImageUrl ?? "");
+  const [coverOrientation, setCoverOrientation] = React.useState<"landscape" | "portrait">(
+    initialArticle?.coverImageOrientation ?? "landscape"
+  );
+  const [coverPosition, setCoverPosition] = React.useState(initialArticle?.coverImagePosition ?? "center");
   const [duplicateWarning, setDuplicateWarning] = React.useState(false);
   const [aiBusy, setAiBusy] = React.useState<string | null>(null);
   const [saveState, setSaveState] = React.useState<"idle" | "saved" | "submitted">("idle");
@@ -52,6 +59,8 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
   const bodyRef = React.useRef<HTMLTextAreaElement>(null);
   const imageInputRef = React.useRef<HTMLInputElement>(null);
   const [insertingImage, setInsertingImage] = React.useState(false);
+  const [videoUrlInput, setVideoUrlInput] = React.useState("");
+  const [showVideoInput, setShowVideoInput] = React.useState(false);
 
   async function runAi(task: string, fn: () => Promise<void>) {
     setAiBusy(task);
@@ -122,13 +131,70 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
     }
   }
 
+  function handleInsertVideo() {
+    const trimmed = videoUrlInput.trim();
+    if (!trimmed) return;
+
+    const marker = `\n\n[video](${trimmed})\n\n`;
+    const textarea = bodyRef.current;
+    const start = textarea?.selectionStart ?? body.length;
+    const end = textarea?.selectionEnd ?? body.length;
+    const next = body.slice(0, start) + marker + body.slice(end);
+    setBody(next);
+
+    setVideoUrlInput("");
+    setShowVideoInput(false);
+
+    requestAnimationFrame(() => {
+      if (!textarea) return;
+      textarea.focus();
+      const pos = start + marker.length;
+      textarea.setSelectionRange(pos, pos);
+    });
+  }
+
+  function handleInsertVideo() {
+    const url = videoUrlInput.trim();
+    if (!url) return;
+
+    const marker = `\n\n[video](${url})\n\n`;
+    const textarea = bodyRef.current;
+    const start = textarea?.selectionStart ?? body.length;
+    const end = textarea?.selectionEnd ?? body.length;
+    const next = body.slice(0, start) + marker + body.slice(end);
+    setBody(next);
+
+    requestAnimationFrame(() => {
+      if (!textarea) return;
+      textarea.focus();
+      const pos = start + marker.length;
+      textarea.setSelectionRange(pos, pos);
+    });
+
+    setVideoUrlInput("");
+    setShowVideoInput(false);
+  }
+
   async function handleSave(action: "draft" | "submit") {
     setSaving(true);
     setSaveError(null);
 
+    const payload = {
+      title,
+      deck,
+      lead,
+      body,
+      category,
+      tags,
+      coverImageUrl,
+      coverImageOrientation: coverOrientation,
+      coverImagePosition: coverPosition,
+      action,
+    };
+
     const result = isEditMode
-      ? await updateDraftAction(initialArticle!.id, { title, deck, lead, body, category, tags, coverImageUrl, action })
-      : await saveArticleAction({ title, deck, lead, body, category, tags, coverImageUrl, action });
+      ? await updateDraftAction(initialArticle!.id, payload)
+      : await saveArticleAction(payload);
 
     setSaving(false);
 
@@ -183,7 +249,7 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
           <div className="flex flex-col gap-1.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Label htmlFor="body">متن کامل</Label>
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <input
                   ref={imageInputRef}
                   type="file"
@@ -202,15 +268,39 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
                   <ImagePlus className="h-3 w-3" />
                   {insertingImage ? "در حال آپلود…" : "درج تصویر در متن"}
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  onClick={() => setShowVideoInput((v) => !v)}
+                >
+                  <Film className="h-3 w-3" />
+                  درج ویدیو در متن
+                </Button>
                 <Button type="button" variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={handleCheckDuplicate} disabled={aiBusy === "duplicate"}>
                   <Sparkles className="h-3 w-3" />
                   {aiBusy === "duplicate" ? "در حال بررسی…" : "بررسی تکراری بودن خبر"}
                 </Button>
               </div>
             </div>
+            {showVideoInput && (
+              <div className="flex items-center gap-1.5 rounded-md border border-primary/30 bg-accent/40 p-2">
+                <Input
+                  value={videoUrlInput}
+                  onChange={(e) => setVideoUrlInput(e.target.value)}
+                  placeholder="لینک ویدیو از یوتیوب، آپارات یا هر سایت دیگر"
+                  dir="ltr"
+                  className="h-8 text-sm"
+                />
+                <Button type="button" size="sm" className="h-8 shrink-0" onClick={handleInsertVideo} disabled={!videoUrlInput.trim()}>
+                  درج
+                </Button>
+              </div>
+            )}
             <Textarea ref={bodyRef} id="body" value={body} onChange={(e) => setBody(e.target.value)} rows={12} placeholder="متن کامل خبر…" />
             <p className="text-xs text-muted-foreground">
-              برای درج تصویر داخل متن، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی «درج تصویر در متن» بزنید — تصویر دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
+              برای درج تصویر یا ویدیو داخل متن، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
             </p>
             {duplicateWarning && (
               <p className="flex items-center gap-1.5 text-xs text-secondary">
@@ -307,9 +397,30 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
               mode="single"
               accept="image/*"
               label="تصویر را اینجا رها کنید یا برای انتخاب کلیک کنید"
-              hint="حداکثر ۸ مگابایت"
+              hint="حداکثر ۸ مگابایت — برای تغییر تصویر، یک فایل جدید انتخاب کنید"
               onChange={(urls) => setCoverImageUrl(urls[0] ?? "")}
             />
+            {coverImageUrl && (
+              <div className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3">
+                <div
+                  className={`relative w-full overflow-hidden rounded-md bg-muted ${coverOrientation === "portrait" ? "aspect-[4/5]" : "aspect-[16/9]"}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={coverImageUrl}
+                    alt="پیش‌نمایش تصویر شاخص"
+                    className="h-full w-full object-cover"
+                    style={{ objectPosition: coverPosition }}
+                  />
+                </div>
+                <CoverImagePositionPicker
+                  orientation={coverOrientation}
+                  position={coverPosition}
+                  onOrientationChange={setCoverOrientation}
+                  onPositionChange={setCoverPosition}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

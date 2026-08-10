@@ -18,11 +18,13 @@ function wordCount(body: string): number {
 }
 
 function mapCoverImage(article: Article): MediaAsset {
+  const isPortrait = article.coverImageOrientation === "portrait";
   return {
     url: article.coverImageUrl || "/covers/placeholder.jpg",
     alt: article.coverImageAlt || article.title,
-    width: 1600,
-    height: 900,
+    width: isPortrait ? 1200 : 1600,
+    height: isPortrait ? 1500 : 900,
+    objectPosition: article.coverImagePosition || "center",
   };
 }
 
@@ -61,6 +63,7 @@ export function mapArticle(article: Article & { author: User }): NewsArticle {
     lead: article.lead,
     body: article.body,
     coverImage: mapCoverImage(article),
+    coverOrientation: article.coverImageOrientation === "portrait" ? "portrait" : "landscape",
     videoUrl: article.videoUrl ?? undefined,
     audioUrl: article.audioUrl ?? undefined,
     category: mapCategory(article.categorySlug),
@@ -72,6 +75,7 @@ export function mapArticle(article: Article & { author: User }): NewsArticle {
     wordCount: words,
     viewCount: article.viewCount,
     isFeatured: article.isFeatured,
+    isCitizenReport: article.isCitizenReport,
     seo: {
       title: article.seoTitle ?? undefined,
       description: article.seoDescription ?? undefined,
@@ -194,6 +198,8 @@ export interface CreateArticleInput {
   categorySlug: string;
   tags: string[];
   coverImageUrl?: string;
+  coverImageOrientation?: "landscape" | "portrait";
+  coverImagePosition?: string;
   status: "DRAFT" | "PENDING_REVIEW";
 }
 
@@ -208,6 +214,8 @@ export async function createArticle(input: CreateArticleInput) {
       categorySlug: input.categorySlug,
       tags: input.tags,
       coverImageUrl: input.coverImageUrl || null,
+      coverImageOrientation: input.coverImageOrientation || "landscape",
+      coverImagePosition: input.coverImagePosition || "center",
       status: input.status,
       authorId: input.authorId,
     },
@@ -222,6 +230,8 @@ export interface UpdateArticleInput {
   categorySlug?: string;
   tags?: string[];
   coverImageUrl?: string;
+  coverImageOrientation?: "landscape" | "portrait";
+  coverImagePosition?: string;
 }
 
 export async function updateArticleContent(articleId: string, input: UpdateArticleInput) {
@@ -235,6 +245,8 @@ export async function updateArticleContent(articleId: string, input: UpdateArtic
       ...(input.categorySlug !== undefined && { categorySlug: input.categorySlug }),
       ...(input.tags !== undefined && { tags: input.tags }),
       ...(input.coverImageUrl !== undefined && { coverImageUrl: input.coverImageUrl || null }),
+      ...(input.coverImageOrientation !== undefined && { coverImageOrientation: input.coverImageOrientation }),
+      ...(input.coverImagePosition !== undefined && { coverImagePosition: input.coverImagePosition }),
     },
   });
 }
@@ -258,6 +270,64 @@ export async function rejectArticle(articleId: string, note?: string) {
     where: { id: articleId },
     data: { status: "REJECTED", reviewNote: note || null },
   });
+}
+
+export interface CreateCitizenReportInput {
+  authorId: string;
+  title: string;
+  lead: string;
+  body: string;
+  categorySlug: string;
+  coverImageUrl?: string;
+}
+
+export async function createCitizenReportArticle(input: CreateCitizenReportInput) {
+  return db.article.create({
+    data: {
+      slug: slugify(input.title),
+      title: input.title,
+      lead: input.lead,
+      body: input.body,
+      categorySlug: input.categorySlug,
+      coverImageUrl: input.coverImageUrl || null,
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+      isCitizenReport: true,
+      kind: "REPORT",
+      authorId: input.authorId,
+    },
+  });
+}
+
+export async function getCitizenReports(limit?: number): Promise<NewsArticle[]> {
+  const articles = await db.article.findMany({
+    where: { ...PUBLISHED_WHERE, isCitizenReport: true },
+    include: { author: true },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+  });
+  return articles.map(mapArticle);
+}
+
+export async function searchArticles(query: string, limit = 24): Promise<NewsArticle[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const articles = await db.article.findMany({
+    where: {
+      ...PUBLISHED_WHERE,
+      OR: [
+        { title: { contains: trimmed, mode: "insensitive" } },
+        { body: { contains: trimmed, mode: "insensitive" } },
+        { lead: { contains: trimmed, mode: "insensitive" } },
+        { tags: { has: trimmed } },
+      ],
+    },
+    include: { author: true },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+  });
+  return articles.map(mapArticle);
 }
 
 export async function getArticlesByTag(tag: string, limit?: number): Promise<NewsArticle[]> {

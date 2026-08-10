@@ -28,6 +28,9 @@ export default async function EditorArticleEditPage({ params }: PageProps) {
             lead: article.lead,
             body: article.body,
             categorySlug: article.categorySlug,
+            coverImageUrl: article.coverImageUrl ?? undefined,
+            coverImageOrientation: article.coverImageOrientation === "portrait" ? "portrait" : "landscape",
+            coverImagePosition: article.coverImagePosition ?? undefined,
           }}
         />
       </div>
