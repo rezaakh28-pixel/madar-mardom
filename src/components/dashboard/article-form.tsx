@@ -153,28 +153,6 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
     });
   }
 
-  function handleInsertVideo() {
-    const url = videoUrlInput.trim();
-    if (!url) return;
-
-    const marker = `\n\n[video](${url})\n\n`;
-    const textarea = bodyRef.current;
-    const start = textarea?.selectionStart ?? body.length;
-    const end = textarea?.selectionEnd ?? body.length;
-    const next = body.slice(0, start) + marker + body.slice(end);
-    setBody(next);
-
-    requestAnimationFrame(() => {
-      if (!textarea) return;
-      textarea.focus();
-      const pos = start + marker.length;
-      textarea.setSelectionRange(pos, pos);
-    });
-
-    setVideoUrlInput("");
-    setShowVideoInput(false);
-  }
-
   async function handleSave(action: "draft" | "submit") {
     setSaving(true);
     setSaveError(null);
