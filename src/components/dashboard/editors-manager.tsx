@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { BeatCheckboxGroup } from "@/components/dashboard/beat-checkbox-group";
 import { updateEditorAction, deleteEditorAction, type UpdateEditorState } from "@/app/dashboard/admin/actions";
 import { getCategoryBySlug } from "@/lib/mock-data";
+import { reporterCodename } from "@/lib/codename";
 
 const initialUpdateState: UpdateEditorState = {};
 
@@ -107,6 +108,12 @@ export function EditorsManager({ editors: initialEditors }: { editors: User[] })
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-semibold text-foreground">{editor.name}</p>
+              <p className="text-xs text-muted-foreground">
+                نام رمزی (نمایش عمومی):{" "}
+                <span dir="ltr" className="font-numeral font-medium text-foreground">
+                  {reporterCodename(editor.name, editor.createdAt)}
+                </span>
+              </p>
               <p dir="ltr" className="text-left text-xs text-muted-foreground">
                 {editor.username} · {editor.email}
               </p>

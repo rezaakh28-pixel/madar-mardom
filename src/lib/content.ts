@@ -3,8 +3,17 @@ import { getCategoryBySlug } from "@/lib/mock-data";
 import { readingTime } from "@/lib/utils";
 import { ROLE_LABELS_FA } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
+import { reporterCodename } from "@/lib/codename";
 import type { Article, User } from "@prisma/client";
 import type { Author, Category, MediaAsset, NewsArticle, SiteStats, SpecialCase, ArticleKind } from "@/types";
+
+/**
+ * "public" (default): the byline/author name shown is the reporter's
+ * codename — used by every visitor-facing page.
+ * "internal": the real name is shown — used only inside /dashboard, where
+ * editors/admins need to know who actually wrote something.
+ */
+export type ContentViewer = "public" | "internal";
 
 // ---------------------------------------------------------------------------
 // Real content layer — replaces the article/author functions that used to
@@ -33,11 +42,16 @@ function mapCategory(slug: string): Category {
 }
 
 /** `articleCount` defaults to 0 — it's only shown on the author's own page, which computes it directly to avoid N+1 queries on article lists. */
-export function mapAuthor(user: User, articleCount = 0): Author {
+export function mapAuthor(user: User, articleCount = 0, viewer: ContentViewer = "public"): Author {
+  // Real names (reporters, editors, and admins alike) are never shown
+  // publicly — only their deterministic codename is, everywhere outside the
+  // internal dashboards. See src/lib/codename.ts.
+  const displayName = viewer === "public" ? reporterCodename(user.name, user.createdAt) : user.name;
+
   return {
     id: user.id,
     username: user.username,
-    name: user.name,
+    name: displayName,
     role: user.role,
     title: user.title ?? ROLE_LABELS_FA[user.role],
     avatarUrl: user.avatarUrl || "/authors/default.jpg",
@@ -51,7 +65,7 @@ export function mapAuthor(user: User, articleCount = 0): Author {
   };
 }
 
-export function mapArticle(article: Article & { author: User }): NewsArticle {
+export function mapArticle(article: Article & { author: User }, viewer: ContentViewer = "public"): NewsArticle {
   const words = wordCount(article.body);
   return {
     id: article.id,
@@ -68,7 +82,7 @@ export function mapArticle(article: Article & { author: User }): NewsArticle {
     audioUrl: article.audioUrl ?? undefined,
     category: mapCategory(article.categorySlug),
     tags: article.tags,
-    author: mapAuthor(article.author),
+    author: mapAuthor(article.author, 0, viewer),
     publishedAt: (article.publishedAt ?? article.createdAt).toISOString(),
     updatedAt: article.updatedAt.toISOString(),
     readingMinutes: readingTime(words),
@@ -186,7 +200,9 @@ export async function getPendingArticlesForEditor(beats: string[]): Promise<News
     include: { author: true },
     orderBy: { createdAt: "asc" },
   });
-  return articles.map(mapArticle);
+  // Internal viewer: this feeds the editor's review queue, which must show
+  // the reporter's real name, not their public codename.
+  return articles.map((a) => mapArticle(a, "internal"));
 }
 
 export interface CreateArticleInput {

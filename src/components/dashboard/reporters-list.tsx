@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toggleUserActiveAction, deleteReporterAction } from "@/app/dashboard/admin/actions";
 import { formatFa, formatJalali } from "@/lib/utils";
+import { reporterCodename } from "@/lib/codename";
 
 export interface ReporterWithActivity extends User {
   activity: {
@@ -70,6 +71,12 @@ export function ReportersList({ reporters: initial }: { reporters: ReporterWithA
               <span className="font-bold text-foreground">{reporter.name}</span>
               <Badge variant={reporter.isActive ? "success" : "muted"}>{reporter.isActive ? "فعال" : "غیرفعال"}</Badge>
             </div>
+            <p className="text-xs text-muted-foreground">
+              نام رمزی (نمایش عمومی):{" "}
+              <span dir="ltr" className="font-numeral font-medium text-foreground">
+                {reporterCodename(reporter.name, reporter.createdAt)}
+              </span>
+            </p>
             <p dir="ltr" className="text-left text-xs text-muted-foreground">
               {reporter.username} · {reporter.email}
             </p>
