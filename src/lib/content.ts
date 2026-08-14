@@ -275,10 +275,14 @@ export async function rejectArticle(articleId: string, note?: string) {
 export interface CreateCitizenReportInput {
   authorId: string;
   title: string;
+  deck?: string;
   lead: string;
   body: string;
   categorySlug: string;
+  tags?: string[];
   coverImageUrl?: string;
+  coverImageOrientation?: "landscape" | "portrait";
+  coverImagePosition?: string;
 }
 
 export async function createCitizenReportArticle(input: CreateCitizenReportInput) {
@@ -286,10 +290,14 @@ export async function createCitizenReportArticle(input: CreateCitizenReportInput
     data: {
       slug: slugify(input.title),
       title: input.title,
+      deck: input.deck || null,
       lead: input.lead,
       body: input.body,
       categorySlug: input.categorySlug,
+      tags: input.tags ?? [],
       coverImageUrl: input.coverImageUrl || null,
+      coverImageOrientation: input.coverImageOrientation || "landscape",
+      coverImagePosition: input.coverImagePosition || "center",
       status: "PUBLISHED",
       publishedAt: new Date(),
       isCitizenReport: true,

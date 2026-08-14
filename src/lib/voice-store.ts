@@ -81,6 +81,11 @@ export async function listVoiceSubmissions() {
   return db.voiceSubmission.findMany({ orderBy: { submittedAt: "desc" } });
 }
 
+/** Admin/editor lookup by real `id` (not the public tracking code) — used before converting a submission to an article. */
+export async function getVoiceSubmissionById(id: string) {
+  return db.voiceSubmission.findUnique({ where: { id } });
+}
+
 export async function updateVoiceSubmissionStatus(
   id: string,
   status: "IN_REVIEW" | "PUBLISHED" | "REJECTED",
