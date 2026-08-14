@@ -125,7 +125,7 @@ export async function getLatestArticles(limit = 6): Promise<NewsArticle[]> {
     orderBy: { publishedAt: "desc" },
     take: limit,
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 export async function getMostVisited(limit = 5): Promise<NewsArticle[]> {
@@ -135,7 +135,7 @@ export async function getMostVisited(limit = 5): Promise<NewsArticle[]> {
     orderBy: { viewCount: "desc" },
     take: limit,
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 export async function getArticlesByCategory(slug: string, limit?: number): Promise<NewsArticle[]> {
@@ -145,7 +145,7 @@ export async function getArticlesByCategory(slug: string, limit?: number): Promi
     orderBy: { publishedAt: "desc" },
     take: limit,
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 export async function getArticleBySlug(slug: string): Promise<NewsArticle | null> {
@@ -167,7 +167,7 @@ export async function getRelatedArticles(article: NewsArticle, limit = 3): Promi
     orderBy: { publishedAt: "desc" },
     take: limit,
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 export async function getAuthorByUsername(username: string): Promise<Author | null> {
@@ -185,7 +185,7 @@ export async function getArticlesByAuthor(username: string): Promise<NewsArticle
     include: { author: true },
     orderBy: { publishedAt: "desc" },
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 // -- Reporter / editor workflow ---------------------------------------------
@@ -330,7 +330,7 @@ export async function getCitizenReports(limit?: number): Promise<NewsArticle[]> 
     orderBy: { publishedAt: "desc" },
     take: limit,
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 export async function searchArticles(query: string, limit = 24): Promise<NewsArticle[]> {
@@ -351,7 +351,7 @@ export async function searchArticles(query: string, limit = 24): Promise<NewsArt
     orderBy: { publishedAt: "desc" },
     take: limit,
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 export async function getArticlesByTag(tag: string, limit?: number): Promise<NewsArticle[]> {
@@ -361,7 +361,7 @@ export async function getArticlesByTag(tag: string, limit?: number): Promise<New
     orderBy: { publishedAt: "desc" },
     take: limit,
   });
-  return articles.map(mapArticle);
+  return articles.map((a) => mapArticle(a));
 }
 
 export async function getReporterArticles(authorId: string) {
@@ -468,7 +468,7 @@ export async function getSpecialCaseBySlugPublic(slug: string): Promise<SpecialC
   });
   if (!record) return null;
 
-  const mapped = record.articles.map(mapArticle);
+  const mapped = record.articles.map((a) => mapArticle(a));
   const sections: SpecialCase["sections"] = (
     ["NEWS", "ANALYSIS", "REPORT", "DATA", "VIDEO", "INFOGRAPHIC"] as const
   )
