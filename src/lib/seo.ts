@@ -3,7 +3,7 @@ import type { Author, NewsArticle } from "@/types";
 
 export const SITE_NAME = "مدار مردم";
 export const SITE_SLOGAN = "خبر از دل جامعه";
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://madaremardom.ir";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://madarmardom.ir";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 interface BasePageSeoInput {
