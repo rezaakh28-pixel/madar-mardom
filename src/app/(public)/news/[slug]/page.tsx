@@ -8,6 +8,7 @@ import { ShareButtons } from "@/components/news/share-buttons";
 import { RelatedArticles } from "@/components/news/related-articles";
 import { AuthorCard } from "@/components/news/author-card";
 import { VideoEmbed } from "@/components/news/video-embed";
+import { PhotoGallery } from "@/components/news/photo-gallery";
 import { Badge } from "@/components/ui/badge";
 import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
 import { SITE_URL, buildArticleMetadata, articleJsonLd } from "@/lib/seo";
@@ -110,22 +111,17 @@ export default async function ArticlePage({ params }: PageProps) {
       )}
 
       {/* Reporters/editors write body as plain text; textToSafeHtml() escapes it and wraps
-          paragraphs before this ever reaches dangerouslySetInnerHTML. */}
-      <div
-        className="prose prose-neutral max-w-none prose-headings:font-extrabold prose-a:text-primary"
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: textToSafeHtml(article.body) }}
-      />
-
-      {article.gallery && article.gallery.length > 0 && (
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {article.gallery.map((image) => (
-            <div key={image.url} className="relative aspect-square overflow-hidden rounded-md">
-              <Image src={image.url} alt={image.alt} fill sizes="200px" className="object-cover" />
-            </div>
-          ))}
-        </div>
+          paragraphs before this ever reaches dangerouslySetInnerHTML. Photo-report articles
+          ("گزارش تصویری") have no body text — just the gallery below. */}
+      {article.body.trim() && (
+        <div
+          className="prose prose-neutral max-w-none prose-headings:font-extrabold prose-a:text-primary"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: textToSafeHtml(article.body) }}
+        />
       )}
+
+      {article.gallery && article.gallery.length > 0 && <PhotoGallery images={article.gallery} />}
 
       <div className="mt-8 flex flex-wrap gap-2">
         {article.tags.map((tag) => (

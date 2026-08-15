@@ -43,6 +43,8 @@ export interface SaveArticleInput {
   coverImageUrl?: string;
   coverImageOrientation?: "landscape" | "portrait";
   coverImagePosition?: string;
+  /** Photo-report ("گزارش تصویری") image URLs — required (12–34) instead of body text when category is "infographic". */
+  galleryImages?: string[];
   action: "draft" | "submit";
 }
 
@@ -51,11 +53,40 @@ export interface SaveArticleResult {
   error?: string;
 }
 
+const PHOTO_REPORT_CATEGORY = "infographic";
+const PHOTO_REPORT_MIN_IMAGES = 12;
+const PHOTO_REPORT_MAX_IMAGES = 34;
+
+/** Shared validation for both new articles and draft edits — see the "گزارش تصویری" (photo report) rules on PHOTO_REPORT_CATEGORY above. */
+function validateArticleInput(
+  input: { title: string; lead: string; body: string; category: string; galleryImages?: string[] },
+  action: "draft" | "submit"
+): string | null {
+  if (!input.title.trim() || !input.lead.trim()) {
+    return "تیتر و لید نمی‌توانند خالی باشند.";
+  }
+
+  if (input.category === PHOTO_REPORT_CATEGORY) {
+    const count = input.galleryImages?.length ?? 0;
+    if (count > PHOTO_REPORT_MAX_IMAGES) {
+      return `برای گزارش تصویری حداکثر ${PHOTO_REPORT_MAX_IMAGES} تصویر می‌توانید بارگذاری کنید.`;
+    }
+    if (action === "submit" && (count < PHOTO_REPORT_MIN_IMAGES || count > PHOTO_REPORT_MAX_IMAGES)) {
+      return `برای گزارش تصویری باید بین ${PHOTO_REPORT_MIN_IMAGES} تا ${PHOTO_REPORT_MAX_IMAGES} تصویر بارگذاری کنید.`;
+    }
+  } else if (!input.body.trim()) {
+    return "متن خبر نمی‌تواند خالی باشد.";
+  }
+
+  return null;
+}
+
 export async function saveArticleAction(input: SaveArticleInput): Promise<SaveArticleResult> {
   const reporter = await requireRole("REPORTER");
 
-  if (!input.title.trim() || !input.lead.trim() || !input.body.trim()) {
-    return { ok: false, error: "تیتر، لید و متن خبر نمی‌توانند خالی باشند." };
+  const validationError = validateArticleInput(input, input.action);
+  if (validationError) {
+    return { ok: false, error: validationError };
   }
 
   try {
@@ -70,6 +101,7 @@ export async function saveArticleAction(input: SaveArticleInput): Promise<SaveAr
       coverImageUrl: input.coverImageUrl,
       coverImageOrientation: input.coverImageOrientation,
       coverImagePosition: input.coverImagePosition,
+      galleryImages: input.category === PHOTO_REPORT_CATEGORY ? input.galleryImages : undefined,
       status: input.action === "draft" ? "DRAFT" : "PENDING_REVIEW",
     });
 
@@ -92,6 +124,8 @@ export interface UpdateDraftInput {
   coverImageUrl?: string;
   coverImageOrientation?: "landscape" | "portrait";
   coverImagePosition?: string;
+  /** Photo-report ("گزارش تصویری") image URLs — required (12–34) instead of body text when category is "infographic". */
+  galleryImages?: string[];
   action: "draft" | "submit";
 }
 
@@ -102,8 +136,9 @@ export async function updateDraftAction(articleId: string, input: UpdateDraftInp
   if (!owned) return { ok: false, error: "این خبر یافت نشد یا متعلق به شما نیست." };
   if (owned.status === "PUBLISHED") return { ok: false, error: "خبر منتشرشده از این صفحه قابل ویرایش نیست." };
 
-  if (!input.title.trim() || !input.lead.trim() || !input.body.trim()) {
-    return { ok: false, error: "تیتر، لید و متن خبر نمی‌توانند خالی باشند." };
+  const validationError = validateArticleInput(input, input.action);
+  if (validationError) {
+    return { ok: false, error: validationError };
   }
 
   try {
@@ -117,6 +152,7 @@ export async function updateDraftAction(articleId: string, input: UpdateDraftInp
       coverImageUrl: input.coverImageUrl,
       coverImageOrientation: input.coverImageOrientation,
       coverImagePosition: input.coverImagePosition,
+      galleryImages: input.category === PHOTO_REPORT_CATEGORY ? (input.galleryImages ?? []) : [],
     });
     await db.article.update({
       where: { id: articleId },

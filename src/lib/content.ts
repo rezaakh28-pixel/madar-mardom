@@ -4,6 +4,7 @@ import { readingTime } from "@/lib/utils";
 import { ROLE_LABELS_FA } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
 import { reporterCodename } from "@/lib/codename";
+import { Prisma } from "@prisma/client";
 import type { Article, User } from "@prisma/client";
 import type { Author, Category, MediaAsset, NewsArticle, SiteStats, SpecialCase, ArticleKind } from "@/types";
 
@@ -35,6 +36,22 @@ function mapCoverImage(article: Article): MediaAsset {
     height: isPortrait ? 1500 : 900,
     objectPosition: article.coverImagePosition || "center",
   };
+}
+
+/** Parses the free-form `galleryJson` column (an array of `{url, alt?}`) into `MediaAsset[]` — used by photo-report ("گزارش تصویری") articles. */
+function mapGallery(article: Article): MediaAsset[] {
+  const raw = article.galleryJson;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is { url: string; alt?: string } => {
+      return Boolean(item) && typeof item === "object" && typeof (item as Record<string, unknown>).url === "string";
+    })
+    .map((item, i) => ({
+      url: item.url,
+      alt: item.alt || `${article.title} — تصویر ${i + 1}`,
+      width: 1200,
+      height: 900,
+    }));
 }
 
 function mapCategory(slug: string): Category {
@@ -82,6 +99,7 @@ export function mapArticle(article: Article & { author: User }, viewer: ContentV
     body: article.body,
     coverImage: mapCoverImage(article),
     coverOrientation: article.coverImageOrientation === "portrait" ? "portrait" : "landscape",
+    gallery: mapGallery(article),
     videoUrl: article.videoUrl ?? undefined,
     audioUrl: article.audioUrl ?? undefined,
     category: mapCategory(article.categorySlug),
@@ -231,6 +249,8 @@ export interface CreateArticleInput {
   coverImageUrl?: string;
   coverImageOrientation?: "landscape" | "portrait";
   coverImagePosition?: string;
+  /** Photo-report ("گزارش تصویری") image URLs, shown as a grid gallery instead of body text. */
+  galleryImages?: string[];
   status: "DRAFT" | "PENDING_REVIEW";
 }
 
@@ -247,6 +267,10 @@ export async function createArticle(input: CreateArticleInput) {
       coverImageUrl: input.coverImageUrl || null,
       coverImageOrientation: input.coverImageOrientation || "landscape",
       coverImagePosition: input.coverImagePosition || "center",
+      galleryJson:
+        input.galleryImages && input.galleryImages.length > 0
+          ? input.galleryImages.map((url) => ({ url }))
+          : undefined,
       status: input.status,
       authorId: input.authorId,
     },
@@ -263,6 +287,8 @@ export interface UpdateArticleInput {
   coverImageUrl?: string;
   coverImageOrientation?: "landscape" | "portrait";
   coverImagePosition?: string;
+  /** Photo-report ("گزارش تصویری") image URLs, shown as a grid gallery instead of body text. */
+  galleryImages?: string[];
 }
 
 export async function updateArticleContent(articleId: string, input: UpdateArticleInput) {
@@ -278,6 +304,10 @@ export async function updateArticleContent(articleId: string, input: UpdateArtic
       ...(input.coverImageUrl !== undefined && { coverImageUrl: input.coverImageUrl || null }),
       ...(input.coverImageOrientation !== undefined && { coverImageOrientation: input.coverImageOrientation }),
       ...(input.coverImagePosition !== undefined && { coverImagePosition: input.coverImagePosition }),
+      ...(input.galleryImages !== undefined && {
+        galleryJson:
+          input.galleryImages.length > 0 ? input.galleryImages.map((url) => ({ url })) : Prisma.JsonNull,
+      }),
     },
   });
 }

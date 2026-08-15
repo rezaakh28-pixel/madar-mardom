@@ -32,7 +32,12 @@ export interface EditableArticle {
   coverImageUrl?: string;
   coverImageOrientation?: "landscape" | "portrait";
   coverImagePosition?: string;
+  galleryImages?: string[];
 }
+
+const PHOTO_REPORT_CATEGORY = "infographic";
+const PHOTO_REPORT_MIN_IMAGES = 12;
+const PHOTO_REPORT_MAX_IMAGES = 34;
 
 export function ArticleForm({ initialArticle }: { initialArticle?: EditableArticle }) {
   const router = useRouter();
@@ -45,6 +50,12 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
   const [category, setCategory] = React.useState(initialArticle?.category ?? "society");
   const [tags, setTags] = React.useState<string[]>(initialArticle?.tags ?? []);
   const [tagInput, setTagInput] = React.useState("");
+  const [existingGalleryImages, setExistingGalleryImages] = React.useState<string[]>(
+    initialArticle?.galleryImages ?? []
+  );
+  const [newGalleryImages, setNewGalleryImages] = React.useState<string[]>([]);
+  const galleryImages = [...existingGalleryImages, ...newGalleryImages];
+  const isPhotoReport = category === PHOTO_REPORT_CATEGORY;
   const [coverImageUrl, setCoverImageUrl] = React.useState(initialArticle?.coverImageUrl ?? "");
   const [coverOrientation, setCoverOrientation] = React.useState<"landscape" | "portrait">(
     initialArticle?.coverImageOrientation ?? "landscape"
@@ -167,6 +178,7 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
       coverImageUrl,
       coverImageOrientation: coverOrientation,
       coverImagePosition: coverPosition,
+      galleryImages: isPhotoReport ? galleryImages : [],
       action,
     };
 
@@ -195,6 +207,8 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
     setTags([]);
     setTagInput("");
     setCoverImageUrl("");
+    setExistingGalleryImages([]);
+    setNewGalleryImages([]);
     setDuplicateWarning(false);
     setTimeout(() => setSaveState("idle"), 4000);
   }
@@ -224,69 +238,118 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
             <Textarea id="lead" value={lead} onChange={(e) => setLead(e.target.value)} rows={3} placeholder="پاراگراف آغازین خبر" />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Label htmlFor="body">متن کامل</Label>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleInsertImageFile}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 gap-1 text-xs"
-                  onClick={() => imageInputRef.current?.click()}
-                  disabled={insertingImage}
+          {isPhotoReport ? (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label>تصاویر گزارش</Label>
+                <span
+                  className={`font-numeral text-xs ${
+                    galleryImages.length >= PHOTO_REPORT_MIN_IMAGES && galleryImages.length <= PHOTO_REPORT_MAX_IMAGES
+                      ? "text-muted-foreground"
+                      : "font-medium text-secondary"
+                  }`}
                 >
-                  <ImagePlus className="h-3 w-3" />
-                  {insertingImage ? "در حال آپلود…" : "درج تصویر در متن"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 gap-1 text-xs"
-                  onClick={() => setShowVideoInput((v) => !v)}
-                >
-                  <Film className="h-3 w-3" />
-                  درج ویدیو در متن
-                </Button>
-                <Button type="button" variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={handleCheckDuplicate} disabled={aiBusy === "duplicate"}>
-                  <Sparkles className="h-3 w-3" />
-                  {aiBusy === "duplicate" ? "در حال بررسی…" : "بررسی تکراری بودن خبر"}
-                </Button>
+                  {galleryImages.length} از حداقل {PHOTO_REPORT_MIN_IMAGES} تا حداکثر {PHOTO_REPORT_MAX_IMAGES} تصویر
+                </span>
               </div>
-            </div>
-            {showVideoInput && (
-              <div className="flex items-center gap-1.5 rounded-md border border-primary/30 bg-accent/40 p-2">
-                <Input
-                  value={videoUrlInput}
-                  onChange={(e) => setVideoUrlInput(e.target.value)}
-                  placeholder="لینک ویدیو از یوتیوب، آپارات یا هر سایت دیگر"
-                  dir="ltr"
-                  className="h-8 text-sm"
-                />
-                <Button type="button" size="sm" className="h-8 shrink-0" onClick={handleInsertVideo} disabled={!videoUrlInput.trim()}>
-                  درج
-                </Button>
-              </div>
-            )}
-            <Textarea ref={bodyRef} id="body" value={body} onChange={(e) => setBody(e.target.value)} rows={12} placeholder="متن کامل خبر…" />
-            <p className="text-xs text-muted-foreground">
-              برای درج تصویر یا ویدیو داخل متن، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
-            </p>
-            {duplicateWarning && (
-              <p className="flex items-center gap-1.5 text-xs text-secondary">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                خبری مشابه این متن پیش‌تر منتشر شده است. لطفاً بررسی کنید.
+              <p className="text-xs text-muted-foreground">
+                برای گزارش تصویری به‌جای متن کامل، بین {PHOTO_REPORT_MIN_IMAGES} تا {PHOTO_REPORT_MAX_IMAGES} تصویر
+                بارگذاری کنید. این تصاویر در صفحه‌ی خبر به‌صورت شبکه‌ای نمایش داده می‌شوند و با کلیک روی هرکدام،
+                بزرگ‌نمایی می‌شوند.
               </p>
-            )}
-          </div>
+
+              {existingGalleryImages.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {existingGalleryImages.map((url) => (
+                    <div key={url} className="group relative aspect-square overflow-hidden rounded-md border border-border">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt="تصویر گزارش" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setExistingGalleryImages((prev) => prev.filter((u) => u !== url))}
+                        aria-label="حذف تصویر"
+                        className="absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-navy-900/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <FileUpload
+                mode="multiple"
+                accept="image/*"
+                label="تصاویر را اینجا رها کنید یا برای انتخاب کلیک کنید"
+                hint="می‌توانید چند تصویر را هم‌زمان انتخاب کنید"
+                onChange={setNewGalleryImages}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label htmlFor="body">متن کامل</Label>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleInsertImageFile}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={insertingImage}
+                  >
+                    <ImagePlus className="h-3 w-3" />
+                    {insertingImage ? "در حال آپلود…" : "درج تصویر در متن"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => setShowVideoInput((v) => !v)}
+                  >
+                    <Film className="h-3 w-3" />
+                    درج ویدیو در متن
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={handleCheckDuplicate} disabled={aiBusy === "duplicate"}>
+                    <Sparkles className="h-3 w-3" />
+                    {aiBusy === "duplicate" ? "در حال بررسی…" : "بررسی تکراری بودن خبر"}
+                  </Button>
+                </div>
+              </div>
+              {showVideoInput && (
+                <div className="flex items-center gap-1.5 rounded-md border border-primary/30 bg-accent/40 p-2">
+                  <Input
+                    value={videoUrlInput}
+                    onChange={(e) => setVideoUrlInput(e.target.value)}
+                    placeholder="لینک ویدیو از یوتیوب، آپارات یا هر سایت دیگر"
+                    dir="ltr"
+                    className="h-8 text-sm"
+                  />
+                  <Button type="button" size="sm" className="h-8 shrink-0" onClick={handleInsertVideo} disabled={!videoUrlInput.trim()}>
+                    درج
+                  </Button>
+                </div>
+              )}
+              <Textarea ref={bodyRef} id="body" value={body} onChange={(e) => setBody(e.target.value)} rows={12} placeholder="متن کامل خبر…" />
+              <p className="text-xs text-muted-foreground">
+                برای درج تصویر یا ویدیو داخل متن، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
+              </p>
+              {duplicateWarning && (
+                <p className="flex items-center gap-1.5 text-xs text-secondary">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  خبری مشابه این متن پیش‌تر منتشر شده است. لطفاً بررسی کنید.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-4">

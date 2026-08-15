@@ -23,7 +23,7 @@ export default function ContactPage() {
         <div className="flex flex-col gap-4 text-sm">
           <div className="flex items-center gap-3">
             <Mail className="h-4 w-4 text-secondary" />
-            <span dir="ltr">info@madaremardom.ir</span>
+            <span dir="ltr">info@madarmardom.ir</span>
           </div>
           <div className="flex items-center gap-3">
             <MapPin className="h-4 w-4 text-secondary" />

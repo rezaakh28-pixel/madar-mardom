@@ -22,7 +22,7 @@ async function main() {
   const username = process.env.ADMIN_USERNAME;
   const password = process.env.ADMIN_PASSWORD;
   const name = process.env.ADMIN_NAME ?? "مدیر سایت";
-  const email = process.env.ADMIN_EMAIL ?? `${username}@madaremardom.local`;
+  const email = process.env.ADMIN_EMAIL ?? `${username}@madarmardom.local`;
 
   if (!username || !password) {
     console.error(
