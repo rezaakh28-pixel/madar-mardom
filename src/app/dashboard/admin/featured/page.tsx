@@ -16,7 +16,7 @@ export default async function AdminFeaturedPage() {
       <header>
         <h1 className="text-xl font-extrabold text-foreground">خبر ویژه</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          خبری که اینجا انتخاب کنید، به‌صورت خبر بزرگ اول صفحه اصلی سایت نمایش داده می‌شود.
+          سه خبر ویژه‌ای که اینجا انتخاب می‌کنید به‌صورت اسلایدر بزرگ در صفحه اصلی سایت نمایش داده می‌شوند.
         </p>
       </header>
 
@@ -30,7 +30,7 @@ export default async function AdminFeaturedPage() {
             id: a.id,
             title: a.title,
             categorySlug: a.categorySlug,
-            isFeatured: a.isFeatured,
+            featuredRank: a.featuredRank,
             publishedAt: a.publishedAt ? a.publishedAt.toISOString() : null,
           }))}
         />

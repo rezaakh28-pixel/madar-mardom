@@ -45,15 +45,19 @@ function mapCategory(slug: string): Category {
 export function mapAuthor(user: User, articleCount = 0, viewer: ContentViewer = "public"): Author {
   // Real names (reporters, editors, and admins alike) are never shown
   // publicly — only their deterministic codename is, everywhere outside the
-  // internal dashboards. See src/lib/codename.ts.
+  // internal dashboards. See src/lib/codename.ts. The same goes for their
+  // real role/title: an editor or admin authoring something public must not
+  // be distinguishable from a reporter, so the public title is always the
+  // generic "خبرنگار", regardless of the person's actual role.
   const displayName = viewer === "public" ? reporterCodename(user.name, user.createdAt) : user.name;
+  const displayTitle = viewer === "public" ? ROLE_LABELS_FA.REPORTER : (user.title ?? ROLE_LABELS_FA[user.role]);
 
   return {
     id: user.id,
     username: user.username,
     name: displayName,
     role: user.role,
-    title: user.title ?? ROLE_LABELS_FA[user.role],
+    title: displayTitle,
     avatarUrl: user.avatarUrl || "/authors/default.jpg",
     bio: user.bio ?? "",
     social: {
@@ -88,7 +92,7 @@ export function mapArticle(article: Article & { author: User }, viewer: ContentV
     readingMinutes: readingTime(words),
     wordCount: words,
     viewCount: article.viewCount,
-    isFeatured: article.isFeatured,
+    featuredRank: article.featuredRank,
     isCitizenReport: article.isCitizenReport,
     seo: {
       title: article.seoTitle ?? undefined,
@@ -102,20 +106,31 @@ export function mapArticle(article: Article & { author: User }, viewer: ContentV
 // this is how "schedule for later" works without needing a background job.
 const PUBLISHED_WHERE = { status: "PUBLISHED" as const, publishedAt: { lte: new Date() } };
 
-export async function getFeaturedArticle(): Promise<NewsArticle | null> {
-  const featured = await db.article.findFirst({
-    where: { ...PUBLISHED_WHERE, isFeatured: true },
+/**
+ * Up to 3 articles for the homepage hero carousel, ordered by their
+ * assigned slot (1, 2, 3). If an admin/editor hasn't filled all 3 slots,
+ * the remaining spots are padded with the latest published articles so the
+ * homepage always shows a full carousel where possible.
+ */
+export async function getFeaturedArticles(): Promise<NewsArticle[]> {
+  const featured = await db.article.findMany({
+    where: { ...PUBLISHED_WHERE, featuredRank: { in: [1, 2, 3] } },
     include: { author: true },
-    orderBy: { publishedAt: "desc" },
+    orderBy: { featuredRank: "asc" },
   });
-  if (featured) return mapArticle(featured);
 
-  const fallback = await db.article.findFirst({
-    where: PUBLISHED_WHERE,
+  if (featured.length >= 3) {
+    return featured.slice(0, 3).map((a) => mapArticle(a));
+  }
+
+  const filler = await db.article.findMany({
+    where: { ...PUBLISHED_WHERE, id: { notIn: featured.map((a) => a.id) } },
     include: { author: true },
     orderBy: { publishedAt: "desc" },
+    take: 3 - featured.length,
   });
-  return fallback ? mapArticle(fallback) : null;
+
+  return [...featured, ...filler].map((a) => mapArticle(a));
 }
 
 export async function getLatestArticles(limit = 6): Promise<NewsArticle[]> {
@@ -378,17 +393,22 @@ export async function getArticleForOwner(articleId: string, authorId: string) {
   return article;
 }
 
-// -- Featured article ("خبر ویژه") -------------------------------------------
+// -- Featured articles ("خبر ویژه" — 3-slot homepage hero carousel) ---------
 
-export async function setFeaturedArticle(articleId: string) {
+/**
+ * Assigns `articleId` to hero slot `rank` (1, 2, or 3). If another article
+ * currently holds that slot, it's bumped back to unranked — each slot can
+ * only ever hold one article at a time.
+ */
+export async function setFeaturedArticleRank(articleId: string, rank: 1 | 2 | 3) {
   await db.$transaction([
-    db.article.updateMany({ where: { isFeatured: true }, data: { isFeatured: false } }),
-    db.article.update({ where: { id: articleId }, data: { isFeatured: true } }),
+    db.article.updateMany({ where: { featuredRank: rank }, data: { featuredRank: null } }),
+    db.article.update({ where: { id: articleId }, data: { featuredRank: rank } }),
   ]);
 }
 
-export async function clearFeaturedArticle() {
-  await db.article.updateMany({ where: { isFeatured: true }, data: { isFeatured: false } });
+export async function clearFeaturedRank(rank: 1 | 2 | 3) {
+  await db.article.updateMany({ where: { featuredRank: rank }, data: { featuredRank: null } });
 }
 
 // -- All published articles (admin/editor management) -----------------------

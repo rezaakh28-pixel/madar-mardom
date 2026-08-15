@@ -5,7 +5,7 @@ import { NewsSection } from "@/components/home/news-section";
 import { MostVisited } from "@/components/home/most-visited";
 import { Newsletter } from "@/components/home/newsletter";
 import {
-  getFeaturedArticle,
+  getFeaturedArticles,
   getLatestArticles,
   getMostVisited,
   getArticlesByCategory,
@@ -27,7 +27,7 @@ export const metadata: Metadata = buildPageMetadata({
 const SECTION_FETCH_LIMIT = 9;
 
 export default async function HomePage() {
-  let hero: NewsArticle | null;
+  let hero: NewsArticle[];
   let latest: NewsArticle[];
   let pulseItems: PulseItem[];
   let mostVisited: NewsArticle[];
@@ -42,7 +42,7 @@ export default async function HomePage() {
   try {
     [hero, latest, pulseItems, mostVisited, society, economy, politics, world, video, citizenReports] =
       await Promise.all([
-        getFeaturedArticle(),
+        getFeaturedArticles(),
         getLatestArticles(10),
         getPulseItems(),
         getMostVisited(5),
@@ -55,7 +55,7 @@ export default async function HomePage() {
       ]);
   } catch {
     dbError = true;
-    hero = null;
+    hero = [];
     latest = [];
     pulseItems = [];
     mostVisited = [];
@@ -67,7 +67,8 @@ export default async function HomePage() {
     citizenReports = [];
   }
 
-  const latestExcludingHero = hero ? latest.filter((a) => a.slug !== hero.slug).slice(0, 9) : latest;
+  const heroSlugs = new Set(hero.map((a) => a.slug));
+  const latestExcludingHero = hero.length > 0 ? latest.filter((a) => !heroSlugs.has(a.slug)).slice(0, 9) : latest;
 
   return (
     <div className="container-page flex flex-col gap-10 py-8 sm:gap-14 sm:py-10">
@@ -77,8 +78,8 @@ export default async function HomePage() {
         </p>
       )}
 
-      {hero ? (
-        <HeroNews article={hero} />
+      {hero.length > 0 ? (
+        <HeroNews articles={hero} />
       ) : (
         !dbError && (
           <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">

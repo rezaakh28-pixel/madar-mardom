@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticleCard } from "@/components/news/article-card";
 import { getArticlesByAuthor, getAuthorByUsername } from "@/lib/content";
 import { buildPageMetadata, authorJsonLd } from "@/lib/seo";
-import { ROLE_LABELS_FA } from "@/lib/auth";
 import { formatFa } from "@/lib/utils";
 
 interface PageProps {
@@ -52,7 +50,6 @@ export default async function AuthorPage({ params }: PageProps) {
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
             <h1 className="text-xl font-extrabold text-foreground sm:text-2xl">{author.name}</h1>
-            <Badge>{ROLE_LABELS_FA[author.role]}</Badge>
           </div>
           <p className="text-sm font-medium text-secondary">{author.title}</p>
           {author.bio && <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{author.bio}</p>}

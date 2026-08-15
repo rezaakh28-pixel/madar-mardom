@@ -2,21 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/session";
-import { setFeaturedArticle, clearFeaturedArticle } from "@/lib/content";
+import { setFeaturedArticleRank, clearFeaturedRank } from "@/lib/content";
 import { logger } from "@/lib/logger";
 
-export async function setFeaturedArticleAction(articleId: string) {
+export async function setFeaturedArticleAction(articleId: string, rank: 1 | 2 | 3) {
   const session = await requireRole("EDITOR");
-  await setFeaturedArticle(articleId);
-  logger.audit("featured_article_set", session.user.id, { articleId });
+  await setFeaturedArticleRank(articleId, rank);
+  logger.audit("featured_article_set", session.user.id, { articleId, rank });
   revalidatePath("/", "layout");
   return { ok: true };
 }
 
-export async function clearFeaturedArticleAction() {
+export async function clearFeaturedArticleAction(rank: 1 | 2 | 3) {
   const session = await requireRole("EDITOR");
-  await clearFeaturedArticle();
-  logger.audit("featured_article_cleared", session.user.id, {});
+  await clearFeaturedRank(rank);
+  logger.audit("featured_article_cleared", session.user.id, { rank });
   revalidatePath("/", "layout");
   return { ok: true };
 }

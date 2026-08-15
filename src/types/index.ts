@@ -98,7 +98,8 @@ export interface NewsArticle {
   wordCount: number;
 
   viewCount: number;
-  isFeatured?: boolean;
+  /** Position (1, 2, or 3) in the homepage hero carousel — null/undefined means not featured. */
+  featuredRank?: number | null;
   isCitizenReport?: boolean;
 
   relatedSlugs?: string[];
