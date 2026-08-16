@@ -149,7 +149,7 @@ Brand tokens live in `tailwind.config.ts` (`navy`, `orange`, `surface`, `ink`) a
 | Categories (site sections) | Fixed, curated list — not database content, deliberately | `src/lib/mock-data.ts` (`CATEGORIES`) |
 | Accounts, login, registration, RBAC | **Real** — Postgres-backed, bcrypt-hashed passwords, signed session cookies. See "Authentication" above. | Optional upgrade path to NextAuth is noted in comments in `src/lib/session.ts` if you outgrow this |
 | AI features (summarize, suggest title/tags/category, TTS, dedupe, SEO gen) | Deterministic stubs with real function signatures (dedupe/related-articles check against the real database) | `src/lib/ai.ts` — swap each function body for a real model call |
-| Captcha | Visual placeholder checkbox | Wire a real widget (e.g. Cloudflare Turnstile) in `submission-form.tsx` + verify the token server-side in `api/voice/submit/route.ts` |
+| Captcha | **Real** — Cloudflare Turnstile widget, verified server-side | Get free keys at [dash.cloudflare.com Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile), set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` |
 | Image / file uploads | **Real** — `src/app/api/upload/route.ts` uploads to Vercel Blob | One-time setup on Vercel: **Storage tab → Create Database → Blob → Connect to Project** (auto-adds `BLOB_READ_WRITE_TOKEN` and redeploys) |
 
 ## Notes on RTL

@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/shared/file-upload";
+import { TurnstileWidget } from "@/components/shared/turnstile-widget";
 import { CATEGORIES } from "@/lib/mock-data";
 import type { VoiceSubmissionKind } from "@/types";
-import { ShieldCheck } from "lucide-react";
 
 const KIND_OPTIONS: Array<{ value: VoiceSubmissionKind; label: string }> = [
   { value: "NEWS_TIP", label: "خبر" },
@@ -22,7 +22,8 @@ export function SubmissionForm() {
   const [kind, setKind] = React.useState<VoiceSubmissionKind>("NEWS_TIP");
   const [category, setCategory] = React.useState<string>("society");
   const [fileUrls, setFileUrls] = React.useState<string[]>([]);
-  const [captchaChecked, setCaptchaChecked] = React.useState(false);
+  const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = React.useState(0);
   const [status, setStatus] = React.useState<"idle" | "submitting" | "success" | "error">("idle");
   const [trackingCode, setTrackingCode] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -31,8 +32,8 @@ export function SubmissionForm() {
     e.preventDefault();
     setError(null);
 
-    if (!captchaChecked) {
-      setError("لطفاً تأیید کنید که ربات نیستید.");
+    if (!captchaToken) {
+      setError("لطفاً کپچا را تکمیل کنید.");
       return;
     }
 
@@ -50,8 +51,7 @@ export function SubmissionForm() {
           category,
           location: form.get("location") || undefined,
           fileUrls: fileUrls.length > 0 ? fileUrls : undefined,
-          // Placeholder token — a real Turnstile/reCAPTCHA widget would supply this.
-          captchaToken: "demo-captcha-token",
+          captchaToken,
         }),
       });
 
@@ -63,6 +63,8 @@ export function SubmissionForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "خطایی رخ داد.");
       setStatus("error");
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1); // remount the widget so the person gets a fresh, unused token
     }
   }
 
@@ -143,17 +145,14 @@ export function SubmissionForm() {
         />
       </div>
 
-      {/* Captcha placeholder — replace with a real widget (e.g. Cloudflare Turnstile) before launch. */}
-      <label className="flex items-center gap-2 rounded-md border border-input bg-muted/40 px-3 py-2.5 text-sm">
-        <input
-          type="checkbox"
-          checked={captchaChecked}
-          onChange={(e) => setCaptchaChecked(e.target.checked)}
-          className="h-4 w-4"
+      <div className="flex flex-col gap-1.5">
+        <Label>تأیید امنیتی</Label>
+        <TurnstileWidget
+          key={captchaKey}
+          onVerify={setCaptchaToken}
+          onExpire={() => setCaptchaToken(null)}
         />
-        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-        من ربات نیستم
-      </label>
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
