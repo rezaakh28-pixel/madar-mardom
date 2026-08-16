@@ -115,7 +115,7 @@ export default async function ArticlePage({ params }: PageProps) {
           ("گزارش تصویری") have no body text — just the gallery below. */}
       {article.body.trim() && (
         <div
-          className="prose prose-neutral max-w-none prose-headings:font-extrabold prose-a:text-primary"
+          className="prose prose-neutral max-w-none dark:prose-invert dark:prose-p:text-foreground dark:prose-li:text-foreground prose-headings:font-extrabold prose-a:text-primary"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: textToSafeHtml(article.body) }}
         />

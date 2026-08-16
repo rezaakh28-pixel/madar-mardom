@@ -15,6 +15,7 @@ import {
   Mail,
   BarChart3,
   Activity,
+  Image as ImageIcon,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRole } from "@/types";
@@ -56,6 +57,7 @@ const ADMIN_SUB_NAV: NavItem[] = [
   { href: "/dashboard/admin/editors", label: "سردبیران", icon: UserCog },
   { href: "/dashboard/admin/contact", label: "تماس با ما", icon: Mail },
   { href: "/dashboard/admin/pulse", label: "نبض جامعه", icon: Activity },
+  { href: "/dashboard/admin/ads", label: "تبلیغات", icon: ImageIcon },
 ];
 
 export function DashboardSidebar({

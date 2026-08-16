@@ -3,6 +3,7 @@ import { HeroNews } from "@/components/home/hero-news";
 import { PulseOfSociety } from "@/components/home/pulse-of-society";
 import { NewsSection } from "@/components/home/news-section";
 import { MostVisited } from "@/components/home/most-visited";
+import { AdBox } from "@/components/home/ad-box";
 import { Newsletter } from "@/components/home/newsletter";
 import {
   getFeaturedArticles,
@@ -12,8 +13,10 @@ import {
   getCitizenReports,
 } from "@/lib/content";
 import { getPulseItems } from "@/lib/pulse";
+import { getActiveAds } from "@/lib/ads";
 import { buildPageMetadata } from "@/lib/seo";
 import type { NewsArticle, PulseItem } from "@/types";
+import type { AdBanner } from "@/lib/ads";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "خانه",
@@ -37,21 +40,23 @@ export default async function HomePage() {
   let world: NewsArticle[];
   let video: NewsArticle[];
   let citizenReports: NewsArticle[];
+  let ads: AdBanner[];
   let dbError = false;
 
   try {
-    [hero, latest, pulseItems, mostVisited, society, economy, politics, world, video, citizenReports] =
+    [hero, latest, pulseItems, mostVisited, society, economy, politics, world, video, citizenReports, ads] =
       await Promise.all([
         getFeaturedArticles(),
         getLatestArticles(10),
         getPulseItems(),
-        getMostVisited(5),
+        getMostVisited(10),
         getArticlesByCategory("society", SECTION_FETCH_LIMIT),
         getArticlesByCategory("economy", SECTION_FETCH_LIMIT),
         getArticlesByCategory("politics", SECTION_FETCH_LIMIT),
         getArticlesByCategory("world", SECTION_FETCH_LIMIT),
         getArticlesByCategory("video", SECTION_FETCH_LIMIT),
         getCitizenReports(SECTION_FETCH_LIMIT),
+        getActiveAds(),
       ]);
   } catch {
     dbError = true;
@@ -65,6 +70,7 @@ export default async function HomePage() {
     world = [];
     video = [];
     citizenReports = [];
+    ads = [];
   }
 
   const heroSlugs = new Set(hero.map((a) => a.slug));
@@ -103,6 +109,7 @@ export default async function HomePage() {
 
         <aside className="flex flex-col gap-8">
           {mostVisited.length > 0 && <MostVisited articles={mostVisited} />}
+          <AdBox ads={ads} />
         </aside>
       </div>
 

@@ -237,3 +237,21 @@ model NewsletterSubscriber {
 
   @@map("newsletter_subscribers")
 }
+
+/// "تبلیغات" (Advertisements) — banner images shown stacked in the homepage
+/// sidebar, below "پربازدیدترین‌ها". Admin-managed: add/reorder/toggle from
+/// /dashboard/admin/ads. `order` controls display order (ascending); ties
+/// break by createdAt.
+model Advertisement {
+  id        String   @id @default(cuid())
+  /// Internal label + image alt text — not shown as a heading on the site.
+  title     String
+  imageUrl  String
+  linkUrl   String
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("advertisements")
+}
