@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import type { User } from "@prisma/client";
 import { useActionState } from "react";
 import { Pencil, Trash2, Save, X } from "lucide-react";
@@ -107,7 +108,12 @@ export function EditorsManager({ editors: initialEditors }: { editors: User[] })
         <div key={editor.id} className="rounded-lg border border-border bg-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="font-semibold text-foreground">{editor.name}</p>
+              <Link
+                href={`/dashboard/admin/editors/${editor.id}`}
+                className="font-semibold text-foreground hover:text-primary hover:underline"
+              >
+                {editor.name}
+              </Link>
               <p className="text-xs text-muted-foreground">
                 نام رمزی (نمایش عمومی):{" "}
                 <span dir="ltr" className="font-numeral font-medium text-foreground">

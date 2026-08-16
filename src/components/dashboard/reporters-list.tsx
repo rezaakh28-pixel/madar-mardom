@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import type { User } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,12 @@ export function ReportersList({ reporters: initial }: { reporters: ReporterWithA
         <div key={reporter.id} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-1 flex items-center gap-2">
-              <span className="font-bold text-foreground">{reporter.name}</span>
+              <Link
+                href={`/dashboard/admin/reporters/${reporter.id}`}
+                className="font-bold text-foreground hover:text-primary hover:underline"
+              >
+                {reporter.name}
+              </Link>
               <Badge variant={reporter.isActive ? "success" : "muted"}>{reporter.isActive ? "فعال" : "غیرفعال"}</Badge>
             </div>
             <p className="text-xs text-muted-foreground">

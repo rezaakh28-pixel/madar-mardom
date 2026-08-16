@@ -95,6 +95,7 @@ model User {
 
   articles       Article[]      @relation("ArticleAuthor")
   reviewedByLogs ArticleRevision[] @relation("RevisionEditor")
+  reviewedArticles Article[]    @relation("ArticleReviewer")
 
   @@map("users")
 }
@@ -142,6 +143,11 @@ model Article {
   isCitizenReport Boolean      @default(false)
 
   reviewNote     String?
+  /// Which editor/admin last published or rejected this article — powers the
+  /// "فعالیت سردبیر" tab in the admin panel. Not set on plain content edits.
+  reviewedByEditorId String?
+  reviewedByEditor    User?    @relation("ArticleReviewer", fields: [reviewedByEditorId], references: [id])
+  reviewedAt          DateTime?
 
   publishedAt    DateTime?
   createdAt      DateTime      @default(now())
@@ -151,6 +157,7 @@ model Article {
 
   @@index([status, publishedAt])
   @@index([categorySlug])
+  @@index([reviewedByEditorId])
   @@map("articles")
 }
 

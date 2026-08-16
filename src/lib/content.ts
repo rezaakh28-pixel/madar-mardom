@@ -6,7 +6,7 @@ import { slugify } from "@/lib/slugify";
 import { reporterCodename } from "@/lib/codename";
 import { Prisma } from "@prisma/client";
 import type { Article, User } from "@prisma/client";
-import type { Author, Category, MediaAsset, NewsArticle, SiteStats, SpecialCase, ArticleKind } from "@/types";
+import type { Author, Category, MediaAsset, NewsArticle, SiteStats, SpecialCase, ArticleKind, ArticleStatus } from "@/types";
 
 /**
  * "public" (default): the byline/author name shown is the reporter's
@@ -312,24 +312,41 @@ export async function updateArticleContent(articleId: string, input: UpdateArtic
   });
 }
 
-export async function publishArticleNow(articleId: string) {
+export async function publishArticleNow(articleId: string, editorId: string) {
   return db.article.update({
     where: { id: articleId },
-    data: { status: "PUBLISHED", publishedAt: new Date(), reviewNote: null },
+    data: {
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+      reviewNote: null,
+      reviewedByEditorId: editorId,
+      reviewedAt: new Date(),
+    },
   });
 }
 
-export async function scheduleArticle(articleId: string, publishedAt: Date) {
+export async function scheduleArticle(articleId: string, publishedAt: Date, editorId: string) {
   return db.article.update({
     where: { id: articleId },
-    data: { status: "PUBLISHED", publishedAt, reviewNote: null },
+    data: {
+      status: "PUBLISHED",
+      publishedAt,
+      reviewNote: null,
+      reviewedByEditorId: editorId,
+      reviewedAt: new Date(),
+    },
   });
 }
 
-export async function rejectArticle(articleId: string, note?: string) {
+export async function rejectArticle(articleId: string, note: string | undefined, editorId: string) {
   return db.article.update({
     where: { id: articleId },
-    data: { status: "REJECTED", reviewNote: note || null },
+    data: {
+      status: "REJECTED",
+      reviewNote: note || null,
+      reviewedByEditorId: editorId,
+      reviewedAt: new Date(),
+    },
   });
 }
 
@@ -565,6 +582,153 @@ export async function getReporterActivity(authorId: string) {
     db.article.count({ where: { authorId, status: "REJECTED" } }),
   ]);
   return { draftCount, pendingCount, publishedCount, rejectedCount };
+}
+
+// -- Full user activity (admin panel — click a reporter/editor's name) ------
+
+export type ActivityPeriod = "week" | "month" | "year" | "all";
+
+export interface UserActivityFilter {
+  period?: ActivityPeriod;
+  /** Category slug, or omitted/undefined for all categories. */
+  categorySlug?: string;
+}
+
+export interface UserActivityArticle {
+  id: string;
+  slug: string;
+  title: string;
+  status: ArticleStatus;
+  kind: ArticleKind;
+  categorySlug: string;
+  viewCount: number;
+  createdAt: string;
+  publishedAt: string | null;
+}
+
+export interface UserActivityReviewedArticle {
+  id: string;
+  slug: string;
+  title: string;
+  status: ArticleStatus;
+  categorySlug: string;
+  authorName: string;
+  reviewedAt: string | null;
+}
+
+export interface UserActivitySummary {
+  authored: {
+    total: number;
+    byStatus: Record<ArticleStatus, number>;
+    totalViews: number;
+    byCategory: Array<{ slug: string; count: number }>;
+    articles: UserActivityArticle[];
+  };
+  /** Editorial review actions (publish/reject) this person has taken on OTHER people's articles. Empty for reporters. */
+  reviewed: {
+    total: number;
+    published: number;
+    rejected: number;
+    articles: UserActivityReviewedArticle[];
+  };
+}
+
+function activityPeriodStart(period: ActivityPeriod): Date | undefined {
+  const now = Date.now();
+  switch (period) {
+    case "week":
+      return new Date(now - 7 * 86_400_000);
+    case "month":
+      return new Date(now - 30 * 86_400_000);
+    case "year":
+      return new Date(now - 365 * 86_400_000);
+    default:
+      return undefined;
+  }
+}
+
+const EMPTY_STATUS_COUNTS: Record<ArticleStatus, number> = {
+  DRAFT: 0,
+  PENDING_REVIEW: 0,
+  PUBLISHED: 0,
+  REJECTED: 0,
+  ARCHIVED: 0,
+};
+
+/**
+ * Complete activity record for one reporter or editor — everything they've
+ * authored (any status), plus, for editors, everything they've reviewed
+ * (published or rejected). Powers the detail view opened by clicking a
+ * name in /dashboard/admin/reporters or /dashboard/admin/editors.
+ */
+export async function getUserActivity(userId: string, filter: UserActivityFilter = {}): Promise<UserActivitySummary> {
+  const since = activityPeriodStart(filter.period ?? "all");
+  const categorySlug = filter.categorySlug;
+
+  const authoredWhere = {
+    authorId: userId,
+    ...(since ? { createdAt: { gte: since } } : {}),
+    ...(categorySlug ? { categorySlug } : {}),
+  };
+
+  const [authoredArticles, byStatusGroups, byCategoryGroups, viewsAgg] = await Promise.all([
+    db.article.findMany({ where: authoredWhere, orderBy: { createdAt: "desc" }, take: 300 }),
+    db.article.groupBy({ by: ["status"], where: authoredWhere, _count: true }),
+    db.article.groupBy({ by: ["categorySlug"], where: authoredWhere, _count: true }),
+    db.article.aggregate({ where: authoredWhere, _sum: { viewCount: true } }),
+  ]);
+
+  const byStatus = { ...EMPTY_STATUS_COUNTS };
+  for (const g of byStatusGroups) byStatus[g.status] = g._count;
+
+  const reviewedWhere = {
+    reviewedByEditorId: userId,
+    ...(since ? { reviewedAt: { gte: since } } : {}),
+    ...(categorySlug ? { categorySlug } : {}),
+  };
+
+  const reviewedArticles = await db.article.findMany({
+    where: reviewedWhere,
+    include: { author: true },
+    orderBy: { reviewedAt: "desc" },
+    take: 300,
+  });
+
+  return {
+    authored: {
+      total: authoredArticles.length,
+      byStatus,
+      totalViews: viewsAgg._sum.viewCount ?? 0,
+      byCategory: byCategoryGroups
+        .map((c) => ({ slug: c.categorySlug, count: c._count }))
+        .sort((a, b) => b.count - a.count),
+      articles: authoredArticles.map((a) => ({
+        id: a.id,
+        slug: a.slug,
+        title: a.title,
+        status: a.status,
+        kind: a.kind,
+        categorySlug: a.categorySlug,
+        viewCount: a.viewCount,
+        createdAt: a.createdAt.toISOString(),
+        publishedAt: a.publishedAt?.toISOString() ?? null,
+      })),
+    },
+    reviewed: {
+      total: reviewedArticles.length,
+      published: reviewedArticles.filter((a) => a.status === "PUBLISHED").length,
+      rejected: reviewedArticles.filter((a) => a.status === "REJECTED").length,
+      articles: reviewedArticles.map((a) => ({
+        id: a.id,
+        slug: a.slug,
+        title: a.title,
+        status: a.status,
+        categorySlug: a.categorySlug,
+        authorName: a.author.name,
+        reviewedAt: a.reviewedAt?.toISOString() ?? null,
+      })),
+    },
+  };
 }
 
 // -- Site-wide stats (admin panel) -------------------------------------------

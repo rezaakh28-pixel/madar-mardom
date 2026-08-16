@@ -8,7 +8,7 @@ import type { UpdateArticleInput } from "@/lib/content";
 
 export async function publishNowAction(articleId: string) {
   const editor = await requireRole("EDITOR");
-  await publishArticleNow(articleId);
+  await publishArticleNow(articleId, editor.user.id);
   logger.audit("article_published_now", editor.user.id, { articleId });
   revalidatePath("/", "layout");
   return { ok: true };
@@ -20,7 +20,7 @@ export async function scheduleArticleAction(articleId: string, publishAtIso: str
   if (Number.isNaN(publishAt.getTime())) {
     return { ok: false, error: "تاریخ انتشار نامعتبر است." };
   }
-  await scheduleArticle(articleId, publishAt);
+  await scheduleArticle(articleId, publishAt, editor.user.id);
   logger.audit("article_scheduled", editor.user.id, { articleId, publishAt: publishAt.toISOString() });
   revalidatePath("/", "layout");
   return { ok: true };
@@ -28,7 +28,7 @@ export async function scheduleArticleAction(articleId: string, publishAtIso: str
 
 export async function rejectArticleAction(articleId: string, reason: string) {
   const editor = await requireRole("EDITOR");
-  await rejectArticle(articleId, reason);
+  await rejectArticle(articleId, reason, editor.user.id);
   logger.audit("article_rejected", editor.user.id, { articleId, reason });
   revalidatePath("/dashboard/editor");
   return { ok: true };
