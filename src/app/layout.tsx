@@ -1,21 +1,50 @@
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import type { Metadata } from "next";
+import { Vazirmatn, Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
+import { SITE_NAME, SITE_SLOGAN, SITE_URL, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import "./globals.css";
 
-// Re-check the database at most once per minute for every page under this
-// layout (home, category pages, article pages, tag pages, etc). Without
-// this, a scheduled article never becomes visible on its own once its
-// publish time arrives — the cached page just keeps serving what it looked
-// like before, since nothing ever tells Next.js to re-render it. Explicit
-// actions (publishing now, editing, etc.) already call `revalidatePath`
-// for instant updates; this covers the "time alone made it due" case.
-export const revalidate = 60;
+const vazirmatn = Vazirmatn({
+  subsets: ["arabic"],
+  variable: "--font-vazirmatn",
+  display: "swap",
+});
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: { default: `${SITE_NAME} | ${SITE_SLOGAN}`, template: `%s | ${SITE_NAME}` },
+  description:
+    "مدار مردم، رسانه‌ای مستقل و مردمی است که اخبار، تحلیل و داده‌های مرتبط با جامعه، اقتصاد و زندگی روزمره ایرانیان را با زبانی ساده و قابل اعتماد روایت می‌کند.",
+  openGraph: {
+    title: `${SITE_NAME} | ${SITE_SLOGAN}`,
+    description: "خبر از دل جامعه.",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
+    locale: "fa_IR",
+    type: "website",
+  },
+  alternates: {
+    canonical: SITE_URL,
+    types: { "application/rss+xml": `${SITE_URL}/rss.xml` },
+  },
+  robots: { index: true, follow: true },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col">
-      <Navbar />
-      <main className="flex-1">{children}</main>
-      <Footer />
-    </div>
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
+      <body className={`${vazirmatn.variable} ${inter.variable} font-vazir`}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

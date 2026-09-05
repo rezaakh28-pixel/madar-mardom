@@ -1,52 +1,27 @@
 import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+import { FileStack } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DraftsList, type DraftListItem } from "@/components/dashboard/drafts-list";
-import { getReporterArticles } from "@/lib/content";
-import { getCategoryBySlug } from "@/lib/mock-data";
-import { getSession } from "@/lib/session";
+import { ArticleForm } from "@/components/dashboard/article-form";
 
-export default async function ReporterDraftsPage() {
-  const session = await getSession();
-
-  let drafts: DraftListItem[] = [];
-  let dbError = false;
-  try {
-    const articles = await getReporterArticles(session!.user.id);
-    drafts = articles.map((a) => ({
-      id: a.id,
-      title: a.title,
-      categoryTitle: getCategoryBySlug(a.categorySlug)?.title ?? a.categorySlug,
-      status: a.status,
-      updatedAt: a.updatedAt.toISOString(),
-      reviewNote: a.reviewNote,
-    }));
-  } catch {
-    dbError = true;
-  }
-
+export default function ReporterDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-extrabold text-foreground">پیش‌نویس‌های من</h1>
-          <p className="mt-1 text-sm text-muted-foreground">خبرهایی که ذخیره کرده‌اید یا برای سردبیر فرستاده‌اید.</p>
+          <h1 className="text-xl font-extrabold text-foreground">پنل خبرنگار</h1>
+          <p className="mt-1 text-sm text-muted-foreground">خبر جدید بنویسید یا پیش‌نویس خود را ادامه دهید.</p>
         </div>
-        <Button asChild className="gap-1.5">
-          <Link href="/dashboard/reporter">
-            <PlusCircle className="h-4 w-4" />
-            خبر جدید
+        <Button variant="outline" className="gap-1.5" asChild>
+          <Link href="/dashboard/reporter/drafts">
+            <FileStack className="h-4 w-4" />
+            پیش‌نویس‌های من
           </Link>
         </Button>
       </header>
 
-      {dbError ? (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          اتصال به پایگاه‌داده برقرار نیست.
-        </p>
-      ) : (
-        <DraftsList drafts={drafts} />
-      )}
+      <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
+        <ArticleForm />
+      </div>
     </div>
   );
 }
