@@ -181,6 +181,31 @@ export async function getArticlesByCategory(slug: string, limit?: number): Promi
   return articles.map((a) => mapArticle(a));
 }
 
+export interface PaginatedArticles {
+  articles: NewsArticle[];
+  totalCount: number;
+}
+
+/** Powers the category ("موضوعات") pages' pagination — 8 per page, page buttons at the bottom. */
+export async function getArticlesByCategoryPaginated(
+  slug: string,
+  page: number,
+  pageSize: number
+): Promise<PaginatedArticles> {
+  const where = { ...PUBLISHED_WHERE, categorySlug: slug };
+  const [articles, totalCount] = await Promise.all([
+    db.article.findMany({
+      where,
+      include: { author: true },
+      orderBy: { publishedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    db.article.count({ where }),
+  ]);
+  return { articles: articles.map((a) => mapArticle(a)), totalCount };
+}
+
 export async function getArticleBySlug(slug: string): Promise<NewsArticle | null> {
   const article = await db.article.findUnique({ where: { slug }, include: { author: true } });
   if (!article || article.status !== "PUBLISHED" || (article.publishedAt ?? new Date(0)) > new Date()) {

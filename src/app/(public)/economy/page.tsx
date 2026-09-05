@@ -12,6 +12,11 @@ export function generateMetadata(): Metadata {
   });
 }
 
-export default function Page() {
-  return <CategoryPage slug="economy" />;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
+  return <CategoryPage slug="economy" page={page} />;
 }
