@@ -161,6 +161,21 @@ export async function getLatestArticles(limit = 6): Promise<NewsArticle[]> {
   return articles.map((a) => mapArticle(a));
 }
 
+/** Powers the general "اخبار" listing page's pagination — 8 per page, page buttons at the bottom. */
+export async function getLatestArticlesPaginated(page: number, pageSize: number): Promise<PaginatedArticles> {
+  const [articles, totalCount] = await Promise.all([
+    db.article.findMany({
+      where: PUBLISHED_WHERE,
+      include: { author: true },
+      orderBy: { publishedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    db.article.count({ where: PUBLISHED_WHERE }),
+  ]);
+  return { articles: articles.map((a) => mapArticle(a)), totalCount };
+}
+
 export async function getMostVisited(limit = 5): Promise<NewsArticle[]> {
   const articles = await db.article.findMany({
     where: PUBLISHED_WHERE,

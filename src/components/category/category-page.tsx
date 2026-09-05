@@ -6,7 +6,8 @@ import { getArticlesByCategoryPaginated } from "@/lib/content";
 import { getCategoryBySlug } from "@/lib/mock-data";
 import type { CategorySlug, NewsArticle } from "@/types";
 
-const PAGE_SIZE = 8;
+// 8 rows × 3 columns (the grid below is 3-wide on desktop) = 24 articles per page.
+const PAGE_SIZE = 24;
 
 export async function CategoryPage({ slug, page: pageParam }: { slug: CategorySlug; page?: string }) {
   const category = getCategoryBySlug(slug);
