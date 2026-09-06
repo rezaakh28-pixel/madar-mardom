@@ -121,12 +121,19 @@ const config: Config = {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
           "50%": { opacity: "0.5", transform: "scale(1.4)" },
         },
+        // "نبض جامعه" ticker bar: each slot rolls a new value in from above
+        // when it rotates to the next indicator.
+        "roll-in-down": {
+          "0%": { transform: "translateY(-100%)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-sweep": "pulse-sweep 3.5s linear infinite",
         "pulse-dot": "pulse-dot 2s ease-in-out infinite",
+        "roll-in-down": "roll-in-down 0.6s ease-out",
       },
     },
   },

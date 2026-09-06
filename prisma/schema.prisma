@@ -137,8 +137,10 @@ model Article {
   seoKeywords    String[]      @default([])
 
   viewCount      Int           @default(0)
-  /// Position (1, 2, or 3) in the homepage hero carousel — null means not featured. 1 is the front slide.
+  /// Position (1, 2, or 3) in the homepage "خبر ویژه" row — null means not featured.
   featuredRank   Int?
+  /// The single big homepage headline ("تیتر اصلی") — at most one article is true at a time.
+  isHeroHeadline Boolean       @default(false)
   /// True for articles converted from an approved Voice of People submission — shown in the "گزارشات مردمی" section.
   isCitizenReport Boolean      @default(false)
 

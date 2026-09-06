@@ -125,10 +125,10 @@ export function mapArticle(article: Article & { author: User }, viewer: ContentV
 const PUBLISHED_WHERE = { status: "PUBLISHED" as const, publishedAt: { lte: new Date() } };
 
 /**
- * Up to 3 articles for the homepage hero carousel, ordered by their
+ * Up to 3 articles for the homepage "خبر ویژه" row, ordered by their
  * assigned slot (1, 2, 3). If an admin/editor hasn't filled all 3 slots,
  * the remaining spots are padded with the latest published articles so the
- * homepage always shows a full carousel where possible.
+ * homepage always shows 3 where possible.
  */
 export async function getFeaturedArticles(): Promise<NewsArticle[]> {
   const featured = await db.article.findMany({
@@ -149,6 +149,37 @@ export async function getFeaturedArticles(): Promise<NewsArticle[]> {
   });
 
   return [...featured, ...filler].map((a) => mapArticle(a));
+}
+
+/**
+ * The single big homepage headline ("تیتر اصلی"). Falls back to the latest
+ * published article if an admin/editor hasn't picked one yet, so the
+ * homepage always has a headline.
+ */
+export async function getHeroHeadline(): Promise<NewsArticle | null> {
+  const picked = await db.article.findFirst({
+    where: { ...PUBLISHED_WHERE, isHeroHeadline: true },
+    include: { author: true },
+  });
+  if (picked) return mapArticle(picked);
+
+  const fallback = await db.article.findFirst({
+    where: PUBLISHED_WHERE,
+    include: { author: true },
+    orderBy: { publishedAt: "desc" },
+  });
+  return fallback ? mapArticle(fallback) : null;
+}
+
+export async function setHeroHeadline(articleId: string) {
+  await db.$transaction([
+    db.article.updateMany({ where: { isHeroHeadline: true }, data: { isHeroHeadline: false } }),
+    db.article.update({ where: { id: articleId }, data: { isHeroHeadline: true } }),
+  ]);
+}
+
+export async function clearHeroHeadline() {
+  await db.article.updateMany({ where: { isHeroHeadline: true }, data: { isHeroHeadline: false } });
 }
 
 export async function getLatestArticles(limit = 6): Promise<NewsArticle[]> {
@@ -519,6 +550,41 @@ export async function listSpecialCases() {
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { articles: true } } },
   });
+}
+
+export interface HomeSpecialCase {
+  slug: string;
+  title: string;
+  summary: string;
+  coverImageUrl: string | null;
+  articleCount: number;
+  recentArticles: Array<{ slug: string; title: string }>;
+}
+
+/** The most recently created special case ("پرونده ویژه") — shown in its homepage box. */
+export async function getLatestSpecialCase(): Promise<HomeSpecialCase | null> {
+  const record = await db.specialCase.findFirst({
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: { select: { articles: true } },
+      articles: {
+        where: PUBLISHED_WHERE,
+        orderBy: { publishedAt: "desc" },
+        take: 3,
+        select: { slug: true, title: true },
+      },
+    },
+  });
+  if (!record) return null;
+
+  return {
+    slug: record.slug,
+    title: record.title,
+    summary: record.summary,
+    coverImageUrl: record.coverImageUrl,
+    articleCount: record._count.articles,
+    recentArticles: record.articles,
+  };
 }
 
 export interface CreateSpecialCaseInput {

@@ -1,14 +1,18 @@
 import Link from "next/link";
+import { TrendingUp } from "lucide-react";
 import { formatFa } from "@/lib/utils";
 import type { NewsArticle } from "@/types";
 
 export function MostVisited({ articles }: { articles: NewsArticle[] }) {
   return (
-    <section aria-labelledby="most-visited-heading" className="rounded-xl border border-border bg-card p-5">
-      <h2 id="most-visited-heading" className="mb-4 text-lg font-extrabold text-foreground">
-        پربازدیدترین‌ها
-      </h2>
-      <ol className="flex flex-col gap-4">
+    <section aria-labelledby="most-visited-heading" className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex items-center gap-2 border-b border-border p-4">
+        <TrendingUp className="h-4 w-4 text-secondary" />
+        <h2 id="most-visited-heading" className="text-sm font-extrabold text-foreground">
+          پربازدیدترین‌ها
+        </h2>
+      </div>
+      <ol className="flex flex-1 flex-col gap-4 p-4">
         {articles.map((article, index) => (
           <li key={article.id}>
             <Link href={`/news/${article.slug}`} className="group flex items-start gap-3">

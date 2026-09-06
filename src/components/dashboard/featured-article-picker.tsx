@@ -60,8 +60,7 @@ export function FeaturedArticlePicker({ articles }: { articles: FeaturedPickerIt
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">
-        هر ۳ جایگاه به‌صورت اسلایدر در صفحه اصلی نمایش داده می‌شوند و هر ۳۰ ثانیه به‌طور خودکار جابه‌جا می‌شوند؛
-        کاربران هم می‌توانند با دو دکمه فلش بین آن‌ها جابه‌جا شوند.
+        هر ۳ جایگاه، کنار هم و زیر «تیتر اصلی»، در صفحه اصلی سایت نمایش داده می‌شوند.
       </p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
