@@ -1,40 +1,43 @@
-import { FeaturedArticlePicker } from "@/components/dashboard/featured-article-picker";
-import { getAllPublishedArticles } from "@/lib/content";
+import { ReviewQueue } from "@/components/dashboard/review-queue";
+import { getPendingArticlesForEditor } from "@/lib/content";
+import { getCategoryBySlug } from "@/lib/mock-data";
+import { getSession } from "@/lib/session";
 
-export default async function EditorFeaturedPage() {
-  let articles: Awaited<ReturnType<typeof getAllPublishedArticles>> = [];
-  let dbError = false;
+export default async function EditorDashboardPage() {
+  const session = await getSession();
+  const beats = session?.user.beatCategorySlugs ?? [];
+  const beatCategories = beats.map((slug) => getCategoryBySlug(slug)).filter((c): c is NonNullable<typeof c> => Boolean(c));
 
+  let pending: Awaited<ReturnType<typeof getPendingArticlesForEditor>> = [];
+  let dbError: string | null = null;
   try {
-    articles = await getAllPublishedArticles();
+    pending = await getPendingArticlesForEditor(beats);
   } catch {
-    dbError = true;
+    dbError = "اتصال به پایگاه‌داده برقرار نیست. طبق راهنمای README یک دیتابیس Postgres به پروژه وصل کنید.";
   }
 
+  const beatLabel = beatCategories.length > 0 ? beatCategories.map((c) => c.title).join("، ") : null;
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <header>
-        <h1 className="text-xl font-extrabold text-foreground">خبر ویژه</h1>
+        <h1 className="text-xl font-extrabold text-foreground">
+          تأیید اخبار{beatLabel ? ` — بخش‌های ${beatLabel}` : ""}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          سه خبر ویژه‌ای که اینجا انتخاب می‌کنید به‌صورت اسلایدر بزرگ در صفحه اصلی سایت نمایش داده می‌شوند.
+          {beatLabel
+            ? `بررسی، ویرایش، تأیید یا رد اخبار بخش‌های «${beatLabel}» و زمان‌بندی انتشار.`
+            : "بررسی، ویرایش، تأیید یا رد اخبار ارسالی خبرنگاران و زمان‌بندی انتشار."}
         </p>
       </header>
 
-      {dbError ? (
+      {dbError && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          اتصال به پایگاه‌داده برقرار نیست.
+          {dbError}
         </p>
-      ) : (
-        <FeaturedArticlePicker
-          articles={articles.map((a) => ({
-            id: a.id,
-            title: a.title,
-            categorySlug: a.categorySlug,
-            featuredRank: a.featuredRank,
-            publishedAt: a.publishedAt ? a.publishedAt.toISOString() : null,
-          }))}
-        />
       )}
+
+      <ReviewQueue articles={pending} />
     </div>
   );
 }
