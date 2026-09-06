@@ -26,6 +26,13 @@ export function formatJalali(date: Date | string): string {
   }).format(d);
 }
 
+/** Formats a Gregorian date as a Persian (Jalali) date with the weekday name, e.g. "شنبه، ۲۵ تیر ۱۴۰۵". */
+export function formatJalaliWithWeekday(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const weekday = new Intl.DateTimeFormat("fa-IR", { weekday: "long" }).format(d);
+  return `${weekday}، ${formatJalali(d)}`;
+}
+
 /** Relative time in Persian, e.g. "۳ ساعت پیش". Falls back to a formatted date beyond 7 days. */
 export function timeAgoFa(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;

@@ -1,11 +1,12 @@
-import { MessageCircle, MessageSquare, Camera, Send, Video, Phone, PlayCircle } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Video, Phone, PlayCircle } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
+import { TelegramIcon, InstagramIcon, EitaaIcon, BaleIcon } from "@/components/icons/social-icons";
 
 export interface SocialLink {
   id: string;
   label: string;
   url: string;
-  icon: LucideIcon;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   brandColor: string;
 }
 
@@ -20,7 +21,7 @@ export function getSocialLinks(): SocialLink[] {
     {
       id: "telegram",
       label: "تلگرام",
-      icon: Send,
+      icon: TelegramIcon,
       brandColor: "#26a5e4",
       envValue: process.env.NEXT_PUBLIC_TELEGRAM_URL,
       defaultUrl: "https://t.me/madar_mardom",
@@ -28,7 +29,7 @@ export function getSocialLinks(): SocialLink[] {
     {
       id: "eitaa",
       label: "ایتا",
-      icon: MessageCircle,
+      icon: EitaaIcon,
       brandColor: "#8ecc42",
       envValue: process.env.NEXT_PUBLIC_EITAA_URL,
       defaultUrl: "https://eitaa.com/madar_mardom",
@@ -36,7 +37,7 @@ export function getSocialLinks(): SocialLink[] {
     {
       id: "bale",
       label: "بله",
-      icon: MessageSquare,
+      icon: BaleIcon,
       brandColor: "#2fa6dc",
       envValue: process.env.NEXT_PUBLIC_BALE_URL,
       defaultUrl: "https://ble.ir/madar_mardom",
@@ -44,7 +45,7 @@ export function getSocialLinks(): SocialLink[] {
     {
       id: "instagram",
       label: "اینستاگرام",
-      icon: Camera,
+      icon: InstagramIcon,
       brandColor: "#e1306c",
       envValue: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
       defaultUrl: "https://www.instagram.com/madar.mardom",

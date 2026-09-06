@@ -1,8 +1,11 @@
 import { getSocialLinks } from "@/lib/social-links";
 
-export function SocialLinksRow({ className }: { className?: string }) {
+export function SocialLinksRow({ className, compact = false }: { className?: string; compact?: boolean }) {
   const links = getSocialLinks();
   if (links.length === 0) return null;
+
+  const circleSize = compact ? "h-6 w-6" : "h-9 w-9";
+  const iconSize = compact ? "h-3 w-3" : "h-4 w-4";
 
   return (
     <div className={className}>
@@ -16,10 +19,10 @@ export function SocialLinksRow({ className }: { className?: string }) {
             rel="noopener noreferrer"
             aria-label={`کانال مدار مردم در ${link.label}`}
             title={link.label}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-transform hover:scale-110"
+            className={`flex ${circleSize} items-center justify-center rounded-full text-white transition-transform hover:scale-110`}
             style={{ backgroundColor: link.brandColor }}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className={iconSize} />
           </a>
         );
       })}
