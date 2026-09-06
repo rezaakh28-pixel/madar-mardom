@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, Search, User, X, ChevronDown } from "lucide-react";
+import { Menu, User, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const PRIMARY_LINKS = [
@@ -41,11 +40,9 @@ const MORE_LINKS = [
 export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [searchOpen, setSearchOpen] = React.useState(false);
 
   React.useEffect(() => {
     setMobileOpen(false);
-    setSearchOpen(false);
   }, [pathname]);
 
   return (
@@ -95,30 +92,6 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-1">
-          <div className="hidden items-center sm:flex">
-            {searchOpen ? (
-              <form role="search" action="/search" className="flex items-center gap-1">
-                <Input
-                  autoFocus
-                  type="search"
-                  name="q"
-                  placeholder="جست‌وجو در مدار مردم…"
-                  className="h-9 w-56"
-                  aria-label="جست‌وجو"
-                />
-                <Button type="button" variant="ghost" size="icon" onClick={() => setSearchOpen(false)} aria-label="بستن جست‌وجو">
-                  <X className="h-4 w-4" />
-                </Button>
-              </form>
-            ) : (
-              <Button variant="ghost" size="icon" aria-label="جست‌وجو" onClick={() => setSearchOpen(true)}>
-                <Search className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-
-          <ThemeToggle />
-
           <Button variant="secondary" size="sm" className="hidden gap-1.5 sm:inline-flex" asChild>
             <Link href="/login">
               <User className="h-4 w-4" />
