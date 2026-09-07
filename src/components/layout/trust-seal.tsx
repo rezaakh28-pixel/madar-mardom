@@ -16,7 +16,7 @@ export function TrustSeal() {
       <Script
         src="https://trustseal.e-rasaneh.ir/trustseal.js"
         strategy="afterInteractive"
-        onLoad={() => window.eRasaneh_Trustseal?.(101338, true)}
+        onLoad={() => window.eRasaneh_Trustseal?.(101338, false)}
       />
     </div>
   );
