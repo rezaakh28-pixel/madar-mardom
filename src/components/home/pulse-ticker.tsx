@@ -69,7 +69,7 @@ export function PulseTicker({ items }: { items: PulseItem[] }) {
   return (
     <section
       aria-label="نبض جامعه — شاخص‌های روزمره زندگی مردم"
-      className="overflow-hidden rounded-xl border border-border bg-navy-50/60"
+      className="overflow-hidden rounded-xl border border-border bg-muted/60"
     >
       <div className="flex items-center gap-1 px-3 py-2 sm:gap-2 sm:px-4">
         <div className="flex flex-1 items-center justify-evenly overflow-hidden">

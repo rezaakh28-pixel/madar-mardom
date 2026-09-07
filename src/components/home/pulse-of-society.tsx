@@ -59,7 +59,7 @@ function PulseCard({ item }: { item: PulseItem }) {
 
 export function PulseOfSociety({ items }: { items: PulseItem[] }) {
   return (
-    <section aria-labelledby="pulse-heading" className="relative overflow-hidden rounded-xl border border-border bg-navy-50/60 p-5 sm:p-7">
+    <section aria-labelledby="pulse-heading" className="relative overflow-hidden rounded-xl border border-border bg-muted/60 p-5 sm:p-7">
       {/* Signature motif: a slow ECG-style sweep behind the section heading, echoing "نبض" (pulse). */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-16 overflow-hidden opacity-[0.15]">
         <svg viewBox="0 0 400 60" preserveAspectRatio="none" className="h-full w-[200%] text-primary">
