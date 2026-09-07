@@ -33,8 +33,9 @@ export const metadata: Metadata = buildPageMetadata({
 // Each box shows 3 articles initially, with a "show 6 more" button — so we
 // fetch 9 per section (3 initial + up to 6 more) to avoid a second round trip.
 const SECTION_FETCH_LIMIT = 9;
-// A single "پربازدیدترین‌ها" box now lives beside the special-case box near
-// the top — kept to 8 so the two stay roughly the same size.
+// A single "پربازدیدترین‌ها" / "آخرین اخبار" tabbed box now lives beside the
+// special-case box near the top — kept to 8 per tab so it stays roughly the
+// same size as the special-case box beside it.
 const MOST_VISITED_LIMIT = 8;
 
 export default async function HomePage() {
@@ -134,13 +135,14 @@ export default async function HomePage() {
         <FeaturedNewsRow articles={displayedFeaturedNews} />
         <div className="flex flex-col gap-6">
           <SpecialCaseBox specialCase={specialCase} />
-          {mostVisited.length > 0 && <MostVisited articles={mostVisited} />}
+          {mostVisited.length > 0 && (
+            <MostVisited mostVisited={mostVisited} latest={latestExcludingFeatured.slice(0, MOST_VISITED_LIMIT)} />
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[2fr_1fr]">
         <div className="flex flex-col gap-10">
-          <NewsSection title="آخرین اخبار" href="/news" articles={latestExcludingFeatured} />
           <NewsSection title="گزارشات مردمی" href="/citizen-reports" articles={citizenReports} />
           <NewsSection title="جامعه" href="/society" articles={society} />
           <NewsSection title="اقتصاد" href="/economy" articles={economy} />
