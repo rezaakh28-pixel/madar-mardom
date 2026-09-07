@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { HeroHeadline } from "@/components/home/hero-headline";
 import { FeaturedNewsRow } from "@/components/home/featured-news-row";
 import { SpecialCaseBox } from "@/components/home/special-case-box";
+import { VoiceCtaBox } from "@/components/home/voice-cta-box";
 import { PulseTicker } from "@/components/home/pulse-ticker";
 import { NewsSection } from "@/components/home/news-section";
 import { MostVisited } from "@/components/home/most-visited";
@@ -135,6 +136,7 @@ export default async function HomePage() {
         <FeaturedNewsRow articles={displayedFeaturedNews} />
         <div className="flex flex-col gap-6">
           <SpecialCaseBox specialCase={specialCase} />
+          <VoiceCtaBox />
           {mostVisited.length > 0 && (
             <MostVisited mostVisited={mostVisited} latest={latestExcludingFeatured.slice(0, MOST_VISITED_LIMIT)} />
           )}
