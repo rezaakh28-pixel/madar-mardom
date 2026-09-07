@@ -9,6 +9,7 @@ import {
   FileStack,
   Megaphone,
   Star,
+  Flag,
   FolderOpen,
   Users,
   UserCog,
@@ -42,6 +43,7 @@ const REPORTER_SUB_NAV: NavItem[] = [
 const EDITOR_SUB_NAV: NavItem[] = [
   { href: "/dashboard/editor", label: "تأیید اخبار", icon: Newspaper },
   { href: "/dashboard/editor/voice", label: "صدای مردم", icon: Megaphone },
+  { href: "/dashboard/editor/headline", label: "تیتر اصلی", icon: Flag },
   { href: "/dashboard/editor/featured", label: "خبر ویژه", icon: Star },
   { href: "/dashboard/editor/special-cases", label: "پرونده‌های ویژه", icon: FolderOpen },
   { href: "/dashboard/editor/articles", label: "همه اخبار", icon: Newspaper },
@@ -50,6 +52,7 @@ const EDITOR_SUB_NAV: NavItem[] = [
 const ADMIN_SUB_NAV: NavItem[] = [
   { href: "/dashboard/admin", label: "آمار سایت", icon: BarChart3 },
   { href: "/dashboard/admin/voice", label: "صدای مردم", icon: Megaphone },
+  { href: "/dashboard/admin/headline", label: "تیتر اصلی", icon: Flag },
   { href: "/dashboard/admin/featured", label: "خبر ویژه", icon: Star },
   { href: "/dashboard/admin/special-cases", label: "پرونده‌های ویژه", icon: FolderOpen },
   { href: "/dashboard/admin/articles", label: "همه اخبار", icon: Newspaper },

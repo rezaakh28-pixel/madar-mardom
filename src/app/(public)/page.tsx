@@ -130,7 +130,7 @@ export default async function HomePage() {
         )
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[2fr_1fr]">
         <FeaturedNewsRow articles={displayedFeaturedNews} />
         <div className="flex flex-col gap-6">
           <SpecialCaseBox specialCase={specialCase} />
