@@ -31,9 +31,9 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/",
 });
 
-// Each box shows 3 articles initially, with a "show 6 more" button — so we
-// fetch 9 per section (3 initial + up to 6 more) to avoid a second round trip.
-const SECTION_FETCH_LIMIT = 9;
+// Each box now shows a fixed layout of 3 articles (1 large + 2 small) with
+// no expand button, so we only need to fetch 3 per section.
+const SECTION_FETCH_LIMIT = 3;
 // A single "پربازدیدترین‌ها" / "آخرین اخبار" tabbed box now lives beside the
 // special-case box near the top — kept to 8 per tab so it stays roughly the
 // same size as the special-case box beside it.
@@ -132,19 +132,18 @@ export default async function HomePage() {
         )
       )}
 
+      {/*
+        A single grid for the whole body: the main (right, 2fr) column holds
+        the featured-news box AND every category section stacked directly
+        below it, so the sidebar's height (special case + voice cta + most
+        visited + ads) never leaves a gap in the main column — previously
+        this was two separate grids, and because the sidebar was taller than
+        the featured-news box, the category sections (starting with "جامعه")
+        were pushed far down below "خبر ویژه" with a big empty gap above them.
+      */}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[2fr_1fr]">
-        <FeaturedNewsRow articles={displayedFeaturedNews} />
         <div className="flex flex-col gap-6">
-          <SpecialCaseBox specialCase={specialCase} />
-          <VoiceCtaBox />
-          {mostVisited.length > 0 && (
-            <MostVisited mostVisited={mostVisited} latest={latestExcludingFeatured.slice(0, MOST_VISITED_LIMIT)} />
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[2fr_1fr]">
-        <div className="flex flex-col gap-10">
+          <FeaturedNewsRow articles={displayedFeaturedNews} />
           <NewsSection title="گزارشات مردمی" href="/citizen-reports" articles={citizenReports} />
           <NewsSection title="جامعه" href="/society" articles={society} />
           <NewsSection title="اقتصاد" href="/economy" articles={economy} />
@@ -153,7 +152,12 @@ export default async function HomePage() {
           <NewsSection title="ویدیو" href="/video" articles={video} />
         </div>
 
-        <aside className="flex flex-col gap-8">
+        <aside className="flex flex-col gap-6">
+          <SpecialCaseBox specialCase={specialCase} />
+          <VoiceCtaBox />
+          {mostVisited.length > 0 && (
+            <MostVisited mostVisited={mostVisited} latest={latestExcludingFeatured.slice(0, MOST_VISITED_LIMIT)} />
+          )}
           <AdBox ads={ads} />
         </aside>
       </div>

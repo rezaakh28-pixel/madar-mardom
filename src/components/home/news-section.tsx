@@ -1,14 +1,13 @@
-"use client";
-
-import * as React from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { ArticleCard } from "@/components/news/article-card";
 import { Button } from "@/components/ui/button";
 import type { NewsArticle } from "@/types";
 
-const INITIAL_COUNT = 3;
-
+/**
+ * Category box: the latest article in the category shown large on the left,
+ * and the next two most recent shown small, stacked on the right. Fixed to
+ * these 3 — no "show more" expand button.
+ */
 export function NewsSection({
   title,
   href,
@@ -18,12 +17,10 @@ export function NewsSection({
   href: string;
   articles: NewsArticle[];
 }) {
-  const [expanded, setExpanded] = React.useState(false);
-
   if (articles.length === 0) return null;
 
-  const visible = expanded ? articles : articles.slice(0, INITIAL_COUNT);
-  const hasMore = articles.length > INITIAL_COUNT;
+  const [big, ...rest] = articles;
+  const small = rest.slice(0, 2);
 
   return (
     <section aria-labelledby={`section-${href}`} className="flex flex-col gap-4">
@@ -35,17 +32,19 @@ export function NewsSection({
           <Link href={href}>مشاهده همه</Link>
         </Button>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {visible.map((article) => (
-          <ArticleCard key={article.id} article={article} />
-        ))}
+
+      <div className={`grid grid-cols-1 gap-4 ${small.length > 0 ? "sm:grid-cols-[1fr_2fr]" : ""}`}>
+        {small.length > 0 && (
+          <div className="order-2 flex flex-col gap-4 sm:order-1">
+            {small.map((article) => (
+              <ArticleCard key={article.id} article={article} orientation="horizontal" />
+            ))}
+          </div>
+        )}
+        <div className="order-1 sm:order-2">
+          <ArticleCard article={big} orientation="large" />
+        </div>
       </div>
-      {!expanded && hasMore && (
-        <Button variant="outline" className="mx-auto gap-1.5" onClick={() => setExpanded(true)}>
-          <ChevronDown className="h-4 w-4" />
-          نمایش {Math.min(6, articles.length - INITIAL_COUNT) === 6 ? "۶" : articles.length - INITIAL_COUNT} خبر بعدی
-        </Button>
-      )}
     </section>
   );
 }
