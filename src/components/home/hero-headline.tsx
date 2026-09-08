@@ -6,10 +6,15 @@ import type { NewsArticle } from "@/types";
 import { timeAgoFa, formatFa } from "@/lib/utils";
 
 /**
- * The single big "تیتر اصلی" headline — a proper 16:9 cover image on the
- * physical left, and the site's blue (bg-primary, theme-aware) filling the
- * physical right with the title/lead/meta. A gradient at the seam between
- * them blends the photo into the blue instead of a hard edge.
+ * The single big "تیتر اصلی" headline — a 16:9 cover image on the physical
+ * left, and the site's blue (bg-primary, theme-aware) filling the physical
+ * right with the title/lead/meta. A gradient at the seam between them
+ * blends the photo into the blue instead of a hard edge.
+ *
+ * On sm+ the image fills the row's full height (matching the text panel)
+ * instead of a strict aspect-ratio box, so there's never blank space under
+ * a shorter image — the 16:9 ratio applies on mobile, where it's stacked
+ * on its own with nothing to match.
  *
  * DOM order: text panel first, then image — on this RTL site the first grid
  * item sits physically on the right by default, so no extra ordering is
@@ -45,8 +50,8 @@ export function HeroHeadline({ article }: { article: NewsArticle }) {
         </div>
       </div>
 
-      {/* Image — proper 16:9 box, physically on the left on sm+. */}
-      <div className="relative order-1 aspect-[16/9] w-full overflow-hidden sm:order-2">
+      {/* Image — 16:9 on mobile (stacked); on sm+ fills the row's full height so it always matches the text panel with no gap underneath. */}
+      <div className="relative order-1 aspect-[16/9] w-full overflow-hidden sm:order-2 sm:aspect-auto sm:h-full">
         <Image
           src={article.coverImage.url}
           alt={article.coverImage.alt}
