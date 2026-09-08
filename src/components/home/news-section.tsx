@@ -19,8 +19,10 @@ export function NewsSection({
 }) {
   if (articles.length === 0) return null;
 
-  const [big, ...rest] = articles;
-  const small = rest.slice(0, 2);
+  // noUncheckedIndexedAccess makes indexed access `T | undefined` even after
+  // the length check above, so assert non-null — we know it's safe here.
+  const big = articles[0]!;
+  const small = articles.slice(1, 3);
 
   return (
     <section aria-labelledby={`section-${href}`} className="flex flex-col gap-4">
