@@ -34,10 +34,15 @@ export const metadata: Metadata = buildPageMetadata({
 // Each box now shows a fixed layout of 3 articles (1 large + 2 small) with
 // no expand button, so we only need to fetch 3 per section.
 const SECTION_FETCH_LIMIT = 3;
-// A single "پربازدیدترین‌ها" / "آخرین اخبار" tabbed box now lives beside the
-// special-case box near the top — kept to 8 per tab so it stays roughly the
-// same size as the special-case box beside it.
-const MOST_VISITED_LIMIT = 8;
+// The "پربازدیدترین‌ها" / "آخرین اخبار" tabbed box shows 10 items per tab.
+const MOST_VISITED_LIMIT = 10;
+// "آخرین اخبار" excludes whatever is already shown as hero headline or
+// featured news (up to 1 + 3 = 4 articles). Fetching only MOST_VISITED_LIMIT
+// latest articles meant that after removing those overlaps, fewer than 10 —
+// sometimes far fewer — were left, so recently-uploaded articles were
+// silently missing from the tab. Fetch a bigger buffer to guarantee enough
+// remain after filtering.
+const LATEST_FETCH_LIMIT = MOST_VISITED_LIMIT + 15;
 
 export default async function HomePage() {
   let heroHeadline: NewsArticle | null;
@@ -73,7 +78,7 @@ export default async function HomePage() {
     ] = await Promise.all([
       getHeroHeadline(),
       getFeaturedArticles(),
-      getLatestArticles(10),
+      getLatestArticles(LATEST_FETCH_LIMIT),
       getPulseItems(),
       getMostVisited(MOST_VISITED_LIMIT),
       getArticlesByCategory("society", SECTION_FETCH_LIMIT),
@@ -110,7 +115,8 @@ export default async function HomePage() {
     ...(heroHeadline ? [heroHeadline.slug] : []),
     ...displayedFeaturedNews.map((a) => a.slug),
   ]);
-  const latestExcludingFeatured = usedSlugs.size > 0 ? latest.filter((a) => !usedSlugs.has(a.slug)).slice(0, 9) : latest;
+  const latestExcludingFeatured =
+    usedSlugs.size > 0 ? latest.filter((a) => !usedSlugs.has(a.slug)).slice(0, MOST_VISITED_LIMIT) : latest;
 
   return (
     <div className="container-page flex flex-col gap-10 py-8 sm:gap-14 sm:py-10">
