@@ -22,6 +22,7 @@ const PRIMARY_LINKS = [
   { href: "/economy", label: "اقتصاد" },
   { href: "/politics", label: "سیاست" },
   { href: "/world", label: "جهان" },
+  { href: "/sports", label: "ورزشی" },
   { href: "/voice", label: "صدای مردم" },
 ];
 

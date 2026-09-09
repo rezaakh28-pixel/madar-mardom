@@ -58,9 +58,10 @@ export function ArticleCard({
           style={{ objectPosition: article.coverImage.objectPosition || "center" }}
           priority={priority}
         />
-        <Badge variant="secondary" className="absolute right-2 top-2">
-          {article.category.title}
-        </Badge>
+        <div className="absolute right-2 top-2 flex flex-wrap items-center gap-1.5">
+          {article.isCitizenReport && <Badge variant="default">صدای مردم</Badge>}
+          <Badge variant="secondary">{article.category.title}</Badge>
+        </div>
       </div>
 
       <div className={`flex flex-1 flex-col gap-2 p-4 ${isHorizontal ? "justify-center" : ""}`}>

@@ -91,6 +91,7 @@ export async function suggestCategory(body: string): Promise<string> {
     [/آلودگی|مدرسه|شهر|جامعه/, "society"],
     [/آب|روستا|استان/, "provinces"],
     [/جهان|بین‌الملل/, "world"],
+    [/فوتبال|والیبال|بسکتبال|لیگ|ورزش|تیم ملی|المپیک/, "sports"],
   ];
   for (const [pattern, slug] of rules) {
     if (pattern.test(body)) return slug;

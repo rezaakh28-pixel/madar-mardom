@@ -54,7 +54,15 @@ export default async function HomePage() {
   let economy: NewsArticle[];
   let politics: NewsArticle[];
   let world: NewsArticle[];
+  let sports: NewsArticle[];
+  let provinces: NewsArticle[];
+  let analysis: NewsArticle[];
+  let notes: NewsArticle[];
+  let reports: NewsArticle[];
+  let data: NewsArticle[];
   let video: NewsArticle[];
+  let podcast: NewsArticle[];
+  let infographic: NewsArticle[];
   let citizenReports: NewsArticle[];
   let ads: AdBanner[];
   let specialCase: HomeSpecialCase | null;
@@ -71,7 +79,15 @@ export default async function HomePage() {
       economy,
       politics,
       world,
+      sports,
+      provinces,
+      analysis,
+      notes,
+      reports,
+      data,
       video,
+      podcast,
+      infographic,
       citizenReports,
       ads,
       specialCase,
@@ -85,7 +101,15 @@ export default async function HomePage() {
       getArticlesByCategory("economy", SECTION_FETCH_LIMIT),
       getArticlesByCategory("politics", SECTION_FETCH_LIMIT),
       getArticlesByCategory("world", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("sports", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("provinces", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("analysis", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("notes", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("reports", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("data", SECTION_FETCH_LIMIT),
       getArticlesByCategory("video", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("podcast", SECTION_FETCH_LIMIT),
+      getArticlesByCategory("infographic", SECTION_FETCH_LIMIT),
       getCitizenReports(SECTION_FETCH_LIMIT),
       getActiveAds(),
       getLatestSpecialCase(),
@@ -101,7 +125,15 @@ export default async function HomePage() {
     economy = [];
     politics = [];
     world = [];
+    sports = [];
+    provinces = [];
+    analysis = [];
+    notes = [];
+    reports = [];
+    data = [];
     video = [];
+    podcast = [];
+    infographic = [];
     citizenReports = [];
     ads = [];
     specialCase = null;
@@ -150,12 +182,20 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="flex flex-col gap-6">
           <FeaturedNewsRow articles={displayedFeaturedNews} />
-          <NewsSection title="گزارشات مردمی" href="/citizen-reports" articles={citizenReports} />
+          <NewsSection title="صدای مردم" href="/citizen-reports" articles={citizenReports} />
           <NewsSection title="جامعه" href="/society" articles={society} />
           <NewsSection title="اقتصاد" href="/economy" articles={economy} />
           <NewsSection title="سیاست" href="/politics" articles={politics} />
           <NewsSection title="جهان" href="/world" articles={world} />
+          <NewsSection title="ورزشی" href="/sports" articles={sports} />
+          <NewsSection title="استان‌ها" href="/provinces" articles={provinces} />
+          <NewsSection title="تحلیل" href="/analysis" articles={analysis} />
+          <NewsSection title="یادداشت" href="/notes" articles={notes} />
+          <NewsSection title="گزارش" href="/reports" articles={reports} />
+          <NewsSection title="داده" href="/data" articles={data} />
           <NewsSection title="ویدیو" href="/video" articles={video} />
+          <NewsSection title="پادکست" href="/podcast" articles={podcast} />
+          <NewsSection title="گزارش تصویری" href="/infographic" articles={infographic} />
         </div>
 
         <aside className="flex flex-col gap-6">

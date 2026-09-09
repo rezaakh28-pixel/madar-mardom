@@ -5,7 +5,7 @@ import { getCitizenReports } from "@/lib/content";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "گزارش‌های مردمی",
+  title: "صدای مردم",
   description:
     "گزارش‌ها، عکس‌ها و روایت‌های ارسالی مردم که پس از بررسی و ویرایش سردبیران مدار مردم منتشر شده‌اند.",
   path: "/citizen-reports",
@@ -23,10 +23,10 @@ export default async function CitizenReportsPage() {
 
   return (
     <div className="container-page py-8">
-      <Breadcrumb items={[{ label: "گزارش‌های مردمی", href: "/citizen-reports" }]} />
+      <Breadcrumb items={[{ label: "صدای مردم", href: "/citizen-reports" }]} />
 
       <header className="mb-8">
-        <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">گزارش‌های مردمی</h1>
+        <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">صدای مردم</h1>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
           روایت‌ها و گزارش‌هایی که خودِ مردم ارسال کرده‌اند و پس از بررسی و ویرایش تحریریه‌ی مدار مردم منتشر شده‌اند.
         </p>

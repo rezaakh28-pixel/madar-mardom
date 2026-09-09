@@ -13,6 +13,7 @@ export const CATEGORIES: Category[] = [
   { slug: "politics", title: "سیاست", description: "تحولات سیاسی داخلی و بین‌الملل" },
   { slug: "provinces", title: "استان‌ها", description: "اخبار شهرستان‌ها و مناطق کشور" },
   { slug: "world", title: "جهان", description: "اخبار بین‌المللی" },
+  { slug: "sports", title: "ورزشی", description: "نتایج، اخبار و تحلیل‌های ورزشی" },
   { slug: "analysis", title: "تحلیل", description: "واکاوی عمیق رویدادها" },
   { slug: "notes", title: "یادداشت", description: "دیدگاه و نظر نویسندگان" },
   { slug: "reports", title: "گزارش", description: "گزارش‌های میدانی و تحقیقی" },

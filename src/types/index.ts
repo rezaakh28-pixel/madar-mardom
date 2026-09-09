@@ -25,6 +25,7 @@ export type CategorySlug =
   | "politics"
   | "provinces"
   | "world"
+  | "sports"
   | "analysis"
   | "notes"
   | "reports"
