@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Save } from "lucide-react";
+import { Save, ImagePlus, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +47,69 @@ export function PublishedArticleEditForm({
   const [mainVideoUrl, setMainVideoUrl] = React.useState(article.videoUrl ?? "");
   const [saving, setSaving] = React.useState(false);
 
+  const bodyRef = React.useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = React.useRef<HTMLInputElement>(null);
+  const [insertingImage, setInsertingImage] = React.useState(false);
+  const [insertError, setInsertError] = React.useState<string | null>(null);
+  const [videoUrlInput, setVideoUrlInput] = React.useState("");
+  const [showVideoInput, setShowVideoInput] = React.useState(false);
+
+  async function handleInsertImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setInsertingImage(true);
+    setInsertError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "آپلود با خطا مواجه شد.");
+
+      const marker = `\n\n![تصویر](${data.url})\n\n`;
+      const textarea = bodyRef.current;
+      const start = textarea?.selectionStart ?? body.length;
+      const end = textarea?.selectionEnd ?? body.length;
+      const next = body.slice(0, start) + marker + body.slice(end);
+      setBody(next);
+
+      requestAnimationFrame(() => {
+        if (!textarea) return;
+        textarea.focus();
+        const pos = start + marker.length;
+        textarea.setSelectionRange(pos, pos);
+      });
+    } catch (err) {
+      setInsertError(err instanceof Error ? err.message : "آپلود تصویر با خطا مواجه شد.");
+    } finally {
+      setInsertingImage(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
+  }
+
+  function handleInsertVideo() {
+    const trimmed = videoUrlInput.trim();
+    if (!trimmed) return;
+
+    const marker = `\n\n[video](${trimmed})\n\n`;
+    const textarea = bodyRef.current;
+    const start = textarea?.selectionStart ?? body.length;
+    const end = textarea?.selectionEnd ?? body.length;
+    const next = body.slice(0, start) + marker + body.slice(end);
+    setBody(next);
+
+    setVideoUrlInput("");
+    setShowVideoInput(false);
+
+    requestAnimationFrame(() => {
+      if (!textarea) return;
+      textarea.focus();
+      const pos = start + marker.length;
+      textarea.setSelectionRange(pos, pos);
+    });
+  }
+
   async function handleSave() {
     setSaving(true);
     await updatePublishedArticleAction(article.id, {
@@ -80,8 +143,58 @@ export function PublishedArticleEditForm({
         <Textarea id="edit-lead" rows={3} value={lead} onChange={(e) => setLead(e.target.value)} />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="edit-body">متن کامل</Label>
-        <Textarea id="edit-body" rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label htmlFor="edit-body">متن کامل</Label>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleInsertImageFile}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 text-xs"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={insertingImage}
+            >
+              <ImagePlus className="h-3 w-3" />
+              {insertingImage ? "در حال آپلود…" : "درج تصویر در متن"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 text-xs"
+              onClick={() => setShowVideoInput((v) => !v)}
+            >
+              <Film className="h-3 w-3" />
+              درج ویدیو در متن
+            </Button>
+          </div>
+        </div>
+        {showVideoInput && (
+          <div className="flex items-center gap-1.5 rounded-md border border-primary/30 bg-accent/40 p-2">
+            <Input
+              value={videoUrlInput}
+              onChange={(e) => setVideoUrlInput(e.target.value)}
+              placeholder="لینک ویدیو از یوتیوب، آپارات یا هر سایت دیگر"
+              dir="ltr"
+              className="h-8 text-sm"
+            />
+            <Button type="button" size="sm" className="h-8 shrink-0" onClick={handleInsertVideo} disabled={!videoUrlInput.trim()}>
+              درج
+            </Button>
+          </div>
+        )}
+        {insertError && <p className="text-xs text-destructive">{insertError}</p>}
+        <Textarea ref={bodyRef} id="edit-body" rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
+        <p className="text-xs text-muted-foreground">
+          برای درج تصویر یا ویدیو داخل متن، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
+        </p>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="edit-category">دسته‌بندی</Label>
