@@ -31,6 +31,7 @@ export default async function AdminArticleEditPage({ params }: PageProps) {
             coverImageUrl: article.coverImageUrl ?? undefined,
             coverImageOrientation: article.coverImageOrientation === "portrait" ? "portrait" : "landscape",
             coverImagePosition: article.coverImagePosition ?? undefined,
+            videoUrl: article.videoUrl ?? undefined,
           }}
         />
       </div>

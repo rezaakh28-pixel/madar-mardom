@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
+  // sharp (used in src/app/api/upload/route.ts to normalize uploaded images)
+  // ships a native binary — it must run as-is in the serverless function,
+  // not get pulled into the webpack bundle, or it fails at runtime on Vercel.
+  serverExternalPackages: ["sharp"],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

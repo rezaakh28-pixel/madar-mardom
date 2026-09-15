@@ -23,6 +23,7 @@ export interface PublishedArticleEditable {
   coverImageUrl?: string;
   coverImageOrientation?: "landscape" | "portrait";
   coverImagePosition?: string;
+  videoUrl?: string;
 }
 
 export function PublishedArticleEditForm({
@@ -43,6 +44,7 @@ export function PublishedArticleEditForm({
     article.coverImageOrientation ?? "landscape"
   );
   const [coverPosition, setCoverPosition] = React.useState(article.coverImagePosition ?? "center");
+  const [mainVideoUrl, setMainVideoUrl] = React.useState(article.videoUrl ?? "");
   const [saving, setSaving] = React.useState(false);
 
   async function handleSave() {
@@ -56,6 +58,7 @@ export function PublishedArticleEditForm({
       coverImageUrl,
       coverImageOrientation: coverOrientation,
       coverImagePosition: coverPosition,
+      videoUrl: mainVideoUrl.trim(),
     });
     setSaving(false);
     router.push(returnPath);
@@ -95,6 +98,19 @@ export function PublishedArticleEditForm({
           </SelectContent>
         </Select>
       </div>
+
+      {categorySlug === "video" && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-main-video-url">لینک ویدیوی اصلی</Label>
+          <Input
+            id="edit-main-video-url"
+            dir="ltr"
+            value={mainVideoUrl}
+            onChange={(e) => setMainVideoUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=... یا لینک آپارات/فایل مستقیم"
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <Label>تصویر شاخص</Label>

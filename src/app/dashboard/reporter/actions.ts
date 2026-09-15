@@ -45,6 +45,8 @@ export interface SaveArticleInput {
   coverImagePosition?: string;
   /** Photo-report ("گزارش تصویری") image URLs — required (12–34) instead of body text when category is "infographic". */
   galleryImages?: string[];
+  /** Main video (YouTube/Aparat link or direct file URL) — shown as a player at the top of the article. */
+  videoUrl?: string;
   action: "draft" | "submit";
 }
 
@@ -102,6 +104,7 @@ export async function saveArticleAction(input: SaveArticleInput): Promise<SaveAr
       coverImageOrientation: input.coverImageOrientation,
       coverImagePosition: input.coverImagePosition,
       galleryImages: input.category === PHOTO_REPORT_CATEGORY ? input.galleryImages : undefined,
+      videoUrl: input.videoUrl,
       status: input.action === "draft" ? "DRAFT" : "PENDING_REVIEW",
     });
 
@@ -126,6 +129,8 @@ export interface UpdateDraftInput {
   coverImagePosition?: string;
   /** Photo-report ("گزارش تصویری") image URLs — required (12–34) instead of body text when category is "infographic". */
   galleryImages?: string[];
+  /** Main video (YouTube/Aparat link or direct file URL) — shown as a player at the top of the article. */
+  videoUrl?: string;
   action: "draft" | "submit";
 }
 
@@ -153,6 +158,7 @@ export async function updateDraftAction(articleId: string, input: UpdateDraftInp
       coverImageOrientation: input.coverImageOrientation,
       coverImagePosition: input.coverImagePosition,
       galleryImages: input.category === PHOTO_REPORT_CATEGORY ? (input.galleryImages ?? []) : [],
+      videoUrl: input.videoUrl,
     });
     await db.article.update({
       where: { id: articleId },

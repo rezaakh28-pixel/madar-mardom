@@ -34,6 +34,7 @@ export default async function EditDraftPage({ params }: PageProps) {
             coverImageUrl: article.coverImageUrl ?? undefined,
             coverImageOrientation: article.coverImageOrientation === "portrait" ? "portrait" : "landscape",
             coverImagePosition: article.coverImagePosition ?? undefined,
+            videoUrl: article.videoUrl ?? undefined,
             galleryImages: Array.isArray(article.galleryJson)
               ? (article.galleryJson as { url: string }[])
                   .filter((item) => item && typeof item.url === "string")

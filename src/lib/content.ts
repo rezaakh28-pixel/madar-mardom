@@ -322,8 +322,25 @@ export interface CreateArticleInput {
   coverImagePosition?: string;
   /** Photo-report ("گزارش تصویری") image URLs, shown as a grid gallery instead of body text. */
   galleryImages?: string[];
+  /** Main video for the article (YouTube/Aparat link or a direct file URL) — shown as a player at the top of the article page. Mainly used with the "video" category. */
+  videoUrl?: string;
   status: "DRAFT" | "PENDING_REVIEW";
 }
+
+/**
+ * A category doesn't automatically make its `kind` match (e.g. picking the
+ * "ویدیو" category didn't used to set `kind: VIDEO`) — this keeps the two in
+ * sync so kind-based grouping (author page, special-case page) is correct.
+ */
+const CATEGORY_TO_KIND: Partial<Record<string, ArticleKind>> = {
+  analysis: "ANALYSIS",
+  notes: "NOTE",
+  reports: "REPORT",
+  data: "DATA",
+  video: "VIDEO",
+  podcast: "PODCAST",
+  infographic: "INFOGRAPHIC",
+};
 
 export async function createArticle(input: CreateArticleInput) {
   return db.article.create({
@@ -334,6 +351,7 @@ export async function createArticle(input: CreateArticleInput) {
       lead: input.lead,
       body: input.body,
       categorySlug: input.categorySlug,
+      kind: CATEGORY_TO_KIND[input.categorySlug] ?? "NEWS",
       tags: input.tags,
       coverImageUrl: input.coverImageUrl || null,
       coverImageOrientation: input.coverImageOrientation || "landscape",
@@ -342,6 +360,7 @@ export async function createArticle(input: CreateArticleInput) {
         input.galleryImages && input.galleryImages.length > 0
           ? input.galleryImages.map((url) => ({ url }))
           : undefined,
+      videoUrl: input.videoUrl || null,
       status: input.status,
       authorId: input.authorId,
     },
@@ -360,6 +379,8 @@ export interface UpdateArticleInput {
   coverImagePosition?: string;
   /** Photo-report ("گزارش تصویری") image URLs, shown as a grid gallery instead of body text. */
   galleryImages?: string[];
+  /** Main video for the article (YouTube/Aparat link or a direct file URL) — shown as a player at the top of the article page. */
+  videoUrl?: string;
 }
 
 export async function updateArticleContent(articleId: string, input: UpdateArticleInput) {
@@ -370,7 +391,10 @@ export async function updateArticleContent(articleId: string, input: UpdateArtic
       ...(input.deck !== undefined && { deck: input.deck || null }),
       ...(input.lead !== undefined && { lead: input.lead }),
       ...(input.body !== undefined && { body: input.body }),
-      ...(input.categorySlug !== undefined && { categorySlug: input.categorySlug }),
+      ...(input.categorySlug !== undefined && {
+        categorySlug: input.categorySlug,
+        kind: CATEGORY_TO_KIND[input.categorySlug] ?? "NEWS",
+      }),
       ...(input.tags !== undefined && { tags: input.tags }),
       ...(input.coverImageUrl !== undefined && { coverImageUrl: input.coverImageUrl || null }),
       ...(input.coverImageOrientation !== undefined && { coverImageOrientation: input.coverImageOrientation }),
@@ -379,6 +403,7 @@ export async function updateArticleContent(articleId: string, input: UpdateArtic
         galleryJson:
           input.galleryImages.length > 0 ? input.galleryImages.map((url) => ({ url })) : Prisma.JsonNull,
       }),
+      ...(input.videoUrl !== undefined && { videoUrl: input.videoUrl || null }),
     },
   });
 }

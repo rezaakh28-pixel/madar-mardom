@@ -33,6 +33,7 @@ export interface EditableArticle {
   coverImageOrientation?: "landscape" | "portrait";
   coverImagePosition?: string;
   galleryImages?: string[];
+  videoUrl?: string;
 }
 
 const PHOTO_REPORT_CATEGORY = "infographic";
@@ -61,6 +62,7 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
     initialArticle?.coverImageOrientation ?? "landscape"
   );
   const [coverPosition, setCoverPosition] = React.useState(initialArticle?.coverImagePosition ?? "center");
+  const [mainVideoUrl, setMainVideoUrl] = React.useState(initialArticle?.videoUrl ?? "");
   const [duplicateWarning, setDuplicateWarning] = React.useState(false);
   const [aiBusy, setAiBusy] = React.useState<string | null>(null);
   const [saveState, setSaveState] = React.useState<"idle" | "saved" | "submitted">("idle");
@@ -179,6 +181,7 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
       coverImageOrientation: coverOrientation,
       coverImagePosition: coverPosition,
       galleryImages: isPhotoReport ? galleryImages : [],
+      videoUrl: mainVideoUrl.trim() || undefined,
       action,
     };
 
@@ -207,6 +210,7 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
     setTags([]);
     setTagInput("");
     setCoverImageUrl("");
+    setMainVideoUrl("");
     setExistingGalleryImages([]);
     setNewGalleryImages([]);
     setDuplicateWarning(false);
@@ -374,6 +378,22 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
               </SelectContent>
             </Select>
           </div>
+
+          {category === "video" && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="main-video-url">لینک ویدیوی اصلی</Label>
+              <Input
+                id="main-video-url"
+                dir="ltr"
+                value={mainVideoUrl}
+                onChange={(e) => setMainVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=... یا لینک آپارات/فایل مستقیم"
+              />
+              <p className="text-xs text-muted-foreground">
+                این ویدیو بالای صفحه‌ی خبر، به‌جای پخش‌کننده، نمایش داده می‌شود.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
