@@ -25,11 +25,17 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 //     since no browser can decode/display HEIC in an <img>/Image element —
 //     an uploaded HEIC cover image would previously save successfully but
 //     never actually render on the site.
+//   - Width is capped at MAX_IMAGE_WIDTH. next.config.ts disables Next's
+//     Image Optimization (it was hitting Vercel's free-tier transformation
+//     cap), so a full-resolution phone/DSLR photo would otherwise ship to
+//     every visitor at its original size with no server-side resizing left
+//     to shrink it — this is now the only resizing that happens.
 // ---------------------------------------------------------------------------
 
 export const runtime = "nodejs";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB
+const MAX_IMAGE_WIDTH = 1600;
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]);
 const AV_TYPES = new Set(["video/mp4", "video/webm", "audio/mpeg", "audio/wav"]);
 const ALLOWED_TYPES = new Set([...IMAGE_TYPES, ...AV_TYPES]);
@@ -76,7 +82,9 @@ export async function POST(request: Request) {
       // GIFs are left untouched so animation survives — every browser
       // already renders them natively, so there's nothing to fix.
       const original = Buffer.from(await file.arrayBuffer());
-      const pipeline = sharp(original, { failOn: "none" }).rotate(); // bakes in EXIF orientation
+      const pipeline = sharp(original, { failOn: "none" })
+        .rotate() // bakes in EXIF orientation
+        .resize({ width: MAX_IMAGE_WIDTH, withoutEnlargement: true });
 
       if (file.type === "image/png") {
         body = await pipeline.png().toBuffer();

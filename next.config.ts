@@ -2,7 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    formats: ["image/webp", "image/avif"],
+    // Vercel's Hobby plan caps Image Optimization at 5,000 source-image
+    // transformations/month — once hit, every <Image> request 402s
+    // (OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED) until the next billing
+    // cycle, which is what was breaking images sitewide. `unoptimized`
+    // makes next/image request the original Blob URL directly instead of
+    // routing it through that (quota-limited, paid-tier) optimizer — no
+    // more cap to hit, permanently. This trades away Next's automatic
+    // resizing/AVIF-WebP conversion, but the upload route (src/app/api/
+    // upload/route.ts) already normalizes and re-encodes every uploaded
+    // image with sharp, so what's stored in Blob is already a single,
+    // reasonably-sized, broadly-compatible file — there's little left for
+    // the optimizer to usefully add.
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "**" },
     ],
