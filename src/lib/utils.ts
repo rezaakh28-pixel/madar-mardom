@@ -65,6 +65,18 @@ function extractYouTubeId(url: string): string | null {
   return match?.[1] ?? null;
 }
 
+/**
+ * A YouTube thumbnail URL for a given video URL, or null if it isn't a
+ * recognizable YouTube link. Used as an automatic cover-image fallback for
+ * "ویدیو"-category articles, which skip the manual cover-image upload —
+ * contexts that need a plain static image (small list cards, search/tag
+ * pages, social preview tags) fall back to this instead of the video player.
+ */
+export function youTubeThumbnailUrl(url: string): string | null {
+  const id = extractYouTubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
+
 function extractAparatHash(url: string): string | null {
   const match = url.match(/aparat\.com\/v\/([A-Za-z0-9]+)/);
   return match?.[1] ?? null;

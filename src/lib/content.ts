@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { getCategoryBySlug } from "@/lib/mock-data";
-import { readingTime } from "@/lib/utils";
+import { readingTime, youTubeThumbnailUrl } from "@/lib/utils";
 import { ROLE_LABELS_FA } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
 import { reporterCodename } from "@/lib/codename";
@@ -343,6 +343,13 @@ const CATEGORY_TO_KIND: Partial<Record<string, ArticleKind>> = {
 };
 
 export async function createArticle(input: CreateArticleInput) {
+  // Video-category articles skip the manual cover-image upload — the video
+  // plays in that slot instead. But a few things still need a plain static
+  // image (social-preview tags, the small "similar articles" cards, etc.),
+  // so fall back to the video's own YouTube thumbnail when we can get one.
+  const coverImageUrl =
+    input.coverImageUrl || (input.videoUrl ? youTubeThumbnailUrl(input.videoUrl) : null) || null;
+
   return db.article.create({
     data: {
       slug: slugify(input.title),
@@ -353,7 +360,7 @@ export async function createArticle(input: CreateArticleInput) {
       categorySlug: input.categorySlug,
       kind: CATEGORY_TO_KIND[input.categorySlug] ?? "NEWS",
       tags: input.tags,
-      coverImageUrl: input.coverImageUrl || null,
+      coverImageUrl,
       coverImageOrientation: input.coverImageOrientation || "landscape",
       coverImagePosition: input.coverImagePosition || "center",
       galleryJson:
@@ -384,6 +391,15 @@ export interface UpdateArticleInput {
 }
 
 export async function updateArticleContent(articleId: string, input: UpdateArticleInput) {
+  // Same auto-thumbnail fallback as createArticle above, for when a video
+  // article is edited without an explicit cover image.
+  const resolvedCoverImageUrl =
+    input.coverImageUrl !== undefined
+      ? input.coverImageUrl
+      : input.categorySlug === "video" && input.videoUrl
+        ? youTubeThumbnailUrl(input.videoUrl)
+        : undefined;
+
   return db.article.update({
     where: { id: articleId },
     data: {
@@ -396,7 +412,7 @@ export async function updateArticleContent(articleId: string, input: UpdateArtic
         kind: CATEGORY_TO_KIND[input.categorySlug] ?? "NEWS",
       }),
       ...(input.tags !== undefined && { tags: input.tags }),
-      ...(input.coverImageUrl !== undefined && { coverImageUrl: input.coverImageUrl || null }),
+      ...(resolvedCoverImageUrl !== undefined && { coverImageUrl: resolvedCoverImageUrl || null }),
       ...(input.coverImageOrientation !== undefined && { coverImageOrientation: input.coverImageOrientation }),
       ...(input.coverImagePosition !== undefined && { coverImagePosition: input.coverImagePosition }),
       ...(input.galleryImages !== undefined && {

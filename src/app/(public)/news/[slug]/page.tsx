@@ -81,27 +81,29 @@ export default async function ArticlePage({ params }: PageProps) {
         </div>
       </header>
 
-      <div
-        className={`relative mb-6 w-full overflow-hidden rounded-lg ${article.coverOrientation === "portrait" ? "mx-auto aspect-[4/5] max-w-md" : "aspect-[16/9]"}`}
-      >
-        <Image
-          src={article.coverImage.url}
-          alt={article.coverImage.alt}
-          fill
-          priority
-          sizes="(min-width: 1024px) 768px, 100vw"
-          className="object-cover"
-          style={{ objectPosition: article.coverImage.objectPosition || "center" }}
-        />
-      </div>
-      {article.coverImage.caption && (
-        <p className="mb-8 -mt-4 text-center text-xs text-muted-foreground">{article.coverImage.caption}</p>
-      )}
-
-      {article.videoUrl && (
+      {article.videoUrl ? (
         <div className="mb-8">
           <VideoEmbed url={article.videoUrl} title={article.title} />
         </div>
+      ) : (
+        <>
+          <div
+            className={`relative mb-6 w-full overflow-hidden rounded-lg ${article.coverOrientation === "portrait" ? "mx-auto aspect-[4/5] max-w-md" : "aspect-[16/9]"}`}
+          >
+            <Image
+              src={article.coverImage.url}
+              alt={article.coverImage.alt}
+              fill
+              priority
+              sizes="(min-width: 1024px) 768px, 100vw"
+              className="object-cover"
+              style={{ objectPosition: article.coverImage.objectPosition || "center" }}
+            />
+          </div>
+          {article.coverImage.caption && (
+            <p className="mb-8 -mt-4 text-center text-xs text-muted-foreground">{article.coverImage.caption}</p>
+          )}
+        </>
       )}
 
       {article.audioUrl && (

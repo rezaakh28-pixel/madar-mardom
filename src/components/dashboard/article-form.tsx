@@ -57,6 +57,7 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
   const [newGalleryImages, setNewGalleryImages] = React.useState<string[]>([]);
   const galleryImages = [...existingGalleryImages, ...newGalleryImages];
   const isPhotoReport = category === PHOTO_REPORT_CATEGORY;
+  const isVideoCategory = category === "video";
   const [coverImageUrl, setCoverImageUrl] = React.useState(initialArticle?.coverImageUrl ?? "");
   const [coverOrientation, setCoverOrientation] = React.useState<"landscape" | "portrait">(
     initialArticle?.coverImageOrientation ?? "landscape"
@@ -177,7 +178,7 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
       body,
       category,
       tags,
-      coverImageUrl,
+      coverImageUrl: isVideoCategory ? undefined : coverImageUrl,
       coverImageOrientation: coverOrientation,
       coverImagePosition: coverPosition,
       galleryImages: isPhotoReport ? galleryImages : [],
@@ -452,37 +453,44 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label>تصویر شاخص</Label>
-            <FileUpload
-              mode="single"
-              accept="image/*"
-              label="تصویر را اینجا رها کنید یا برای انتخاب کلیک کنید"
-              hint="حداکثر ۸ مگابایت — برای تغییر تصویر، یک فایل جدید انتخاب کنید"
-              onChange={(urls) => setCoverImageUrl(urls[0] ?? "")}
-            />
-            {coverImageUrl && (
-              <div className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3">
-                <div
-                  className={`relative w-full overflow-hidden rounded-md bg-muted ${coverOrientation === "portrait" ? "aspect-[4/5]" : "aspect-[16/9]"}`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={coverImageUrl}
-                    alt="پیش‌نمایش تصویر شاخص"
-                    className="h-full w-full object-cover"
-                    style={{ objectPosition: coverPosition }}
+          {isVideoCategory ? (
+            <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+              برای دسته‌بندی «ویدیو» نیازی به تصویر شاخص نیست — خودِ ویدیو به‌جای آن روی صفحه‌ی خبر و
+              باکس‌های صفحه‌ی اصلی نمایش و قابل پخش خواهد بود.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label>تصویر شاخص</Label>
+              <FileUpload
+                mode="single"
+                accept="image/*"
+                label="تصویر را اینجا رها کنید یا برای انتخاب کلیک کنید"
+                hint="حداکثر ۸ مگابایت — برای تغییر تصویر، یک فایل جدید انتخاب کنید"
+                onChange={(urls) => setCoverImageUrl(urls[0] ?? "")}
+              />
+              {coverImageUrl && (
+                <div className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3">
+                  <div
+                    className={`relative w-full overflow-hidden rounded-md bg-muted ${coverOrientation === "portrait" ? "aspect-[4/5]" : "aspect-[16/9]"}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={coverImageUrl}
+                      alt="پیش‌نمایش تصویر شاخص"
+                      className="h-full w-full object-cover"
+                      style={{ objectPosition: coverPosition }}
+                    />
+                  </div>
+                  <CoverImagePositionPicker
+                    orientation={coverOrientation}
+                    position={coverPosition}
+                    onOrientationChange={setCoverOrientation}
+                    onPositionChange={setCoverPosition}
                   />
                 </div>
-                <CoverImagePositionPicker
-                  orientation={coverOrientation}
-                  position={coverPosition}
-                  onOrientationChange={setCoverOrientation}
-                  onPositionChange={setCoverPosition}
-                />
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

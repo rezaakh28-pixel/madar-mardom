@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Clock } from "lucide-react";
+import { Clock, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { VideoEmbedFill } from "@/components/news/video-embed";
 import type { NewsArticle } from "@/types";
 import { timeAgoFa, formatFa } from "@/lib/utils";
 
@@ -32,6 +33,11 @@ export function ArticleCard({
 }) {
   const isHorizontal = orientation === "horizontal";
   const isLarge = orientation === "large";
+  // Video-category articles skip the cover image entirely — the video
+  // itself plays right there instead. Small horizontal cards are too
+  // cramped for a live player, so they get a static thumbnail with a play
+  // badge instead (still links through to the article as usual).
+  const isPlayableVideo = !!article.videoUrl && !isHorizontal;
 
   return (
     <Link
@@ -49,22 +55,42 @@ export function ArticleCard({
               : "relative aspect-[16/9] w-full"
         }
       >
-        <Image
-          src={article.coverImage.url}
-          alt={article.coverImage.alt}
-          fill
-          sizes={isHorizontal ? "180px" : isLarge ? "(min-width: 1024px) 40vw, 100vw" : "(min-width: 1024px) 33vw, 100vw"}
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          style={{ objectPosition: article.coverImage.objectPosition || "center" }}
-          priority={priority}
-        />
-        <div className="absolute right-2 top-2 flex flex-wrap items-center gap-1.5">
-          {article.isCitizenReport && <Badge variant="default">صدای مردم</Badge>}
-          <Badge variant="secondary">{article.category.title}</Badge>
-        </div>
+        {isPlayableVideo ? (
+          <VideoEmbedFill url={article.videoUrl!} title={article.title} />
+        ) : (
+          <Image
+            src={article.coverImage.url}
+            alt={article.coverImage.alt}
+            fill
+            sizes={isHorizontal ? "180px" : isLarge ? "(min-width: 1024px) 40vw, 100vw" : "(min-width: 1024px) 33vw, 100vw"}
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            style={{ objectPosition: article.coverImage.objectPosition || "center" }}
+            priority={priority}
+          />
+        )}
+        {isHorizontal && article.videoUrl && (
+          <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-navy-900">
+              <Play className="h-3.5 w-3.5 fill-current" />
+            </span>
+          </span>
+        )}
+        {/* Video players sit on top of the card and would swallow clicks meant for badges/navigation, so keep badges out of their way by not layering them over a live player. */}
+        {!isPlayableVideo && (
+          <div className="absolute right-2 top-2 flex flex-wrap items-center gap-1.5">
+            {article.isCitizenReport && <Badge variant="default">صدای مردم</Badge>}
+            <Badge variant="secondary">{article.category.title}</Badge>
+          </div>
+        )}
       </div>
 
       <div className={`flex flex-1 flex-col gap-2 p-4 ${isHorizontal ? "justify-center" : ""}`}>
+        {isPlayableVideo && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {article.isCitizenReport && <Badge variant="default">صدای مردم</Badge>}
+            <Badge variant="secondary">{article.category.title}</Badge>
+          </div>
+        )}
         <h3
           className={`text-balance font-bold leading-snug text-foreground group-hover:text-primary ${
             isLarge ? "text-lg sm:text-xl" : ""

@@ -118,7 +118,7 @@ export function PublishedArticleEditForm({
       lead,
       body,
       categorySlug,
-      coverImageUrl,
+      coverImageUrl: categorySlug === "video" ? undefined : coverImageUrl,
       coverImageOrientation: coverOrientation,
       coverImagePosition: coverPosition,
       videoUrl: mainVideoUrl.trim(),
@@ -225,37 +225,43 @@ export function PublishedArticleEditForm({
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        <Label>تصویر شاخص</Label>
-        <FileUpload
-          mode="single"
-          accept="image/*"
-          label="برای تغییر تصویر، یک فایل جدید انتخاب کنید"
-          hint="حداکثر ۸ مگابایت"
-          onChange={(urls) => setCoverImageUrl(urls[0] ?? "")}
-        />
-        {coverImageUrl && (
-          <div className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3">
-            <div
-              className={`relative w-full overflow-hidden rounded-md bg-muted ${coverOrientation === "portrait" ? "aspect-[4/5]" : "aspect-[16/9]"}`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={coverImageUrl}
-                alt="پیش‌نمایش تصویر شاخص"
-                className="h-full w-full object-cover"
-                style={{ objectPosition: coverPosition }}
+      {categorySlug === "video" ? (
+        <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+          برای دسته‌بندی «ویدیو» نیازی به تصویر شاخص نیست — خودِ ویدیو به‌جای آن نمایش و قابل پخش خواهد بود.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <Label>تصویر شاخص</Label>
+          <FileUpload
+            mode="single"
+            accept="image/*"
+            label="برای تغییر تصویر، یک فایل جدید انتخاب کنید"
+            hint="حداکثر ۸ مگابایت"
+            onChange={(urls) => setCoverImageUrl(urls[0] ?? "")}
+          />
+          {coverImageUrl && (
+            <div className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3">
+              <div
+                className={`relative w-full overflow-hidden rounded-md bg-muted ${coverOrientation === "portrait" ? "aspect-[4/5]" : "aspect-[16/9]"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverImageUrl}
+                  alt="پیش‌نمایش تصویر شاخص"
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: coverPosition }}
+                />
+              </div>
+              <CoverImagePositionPicker
+                orientation={coverOrientation}
+                position={coverPosition}
+                onOrientationChange={setCoverOrientation}
+                onPositionChange={setCoverPosition}
               />
             </div>
-            <CoverImagePositionPicker
-              orientation={coverOrientation}
-              position={coverPosition}
-              onOrientationChange={setCoverOrientation}
-              onPositionChange={setCoverPosition}
-            />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <Button type="button" className="gap-1.5 self-start" disabled={saving} onClick={handleSave}>
         <Save className="h-4 w-4" />
