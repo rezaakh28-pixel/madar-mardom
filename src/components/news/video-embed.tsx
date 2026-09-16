@@ -17,7 +17,7 @@ export function extractAparatHash(url: string): string | null {
 /** Fixed 16:9 box — used on the article detail page, as the main video player. */
 export function VideoEmbed({ url, title }: { url: string; title?: string }) {
   return (
-    <div className="aspect-video w-full overflow-hidden rounded-lg bg-navy-900">
+    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-navy-900">
       <VideoEmbedFill url={url} title={title} />
     </div>
   );

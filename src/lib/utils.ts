@@ -33,6 +33,12 @@ export function formatJalaliWithWeekday(date: Date | string): string {
   return `${weekday}، ${formatJalali(d)}`;
 }
 
+/** Formats a Gregorian date's time as HH:mm in Persian digits, e.g. "۱۴:۰۵". */
+export function formatTimeFa(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+}
+
 /** Relative time in Persian, e.g. "۳ ساعت پیش". Falls back to a formatted date beyond 7 days. */
 export function timeAgoFa(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;

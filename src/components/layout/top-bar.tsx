@@ -5,7 +5,7 @@ import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { SocialLinksRow } from "@/components/layout/social-links-row";
-import { formatJalaliWithWeekday } from "@/lib/utils";
+import { formatJalaliWithWeekday, formatTimeFa } from "@/lib/utils";
 
 /**
  * Thin bar above the main header — site's primary blue, always visible.
@@ -23,6 +23,14 @@ export function TopBar() {
   const [searchOpen, setSearchOpen] = React.useState(false);
   const today = formatJalaliWithWeekday(new Date());
 
+  // Ticks the visible clock forward once a minute — no need for
+  // second-level precision here, so this stays a cheap, infrequent update.
+  const [now, setNow] = React.useState(() => new Date());
+  React.useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="bg-primary text-primary-foreground">
       <div className="container-page relative flex h-9 items-center justify-between gap-2">
@@ -32,7 +40,7 @@ export function TopBar() {
 
         {!searchOpen && (
           <p className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 truncate px-1 text-[11px] font-medium sm:text-xs">
-            {today}
+            {today} <span aria-hidden>·</span> <span dir="ltr">{formatTimeFa(now)}</span>
           </p>
         )}
 
