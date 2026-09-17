@@ -61,6 +61,12 @@ export function readingTime(wordCount: number): number {
 
 const IMAGE_LINE_RE = /^!\[([^\]]*)\]\((https?:\/\/[^\s")]+|\/[^\s")]+)\)$/;
 const VIDEO_LINE_RE = /^\[video\]\((https?:\/\/[^\s")]+)\)$/i;
+const ALIGN_BLOCK_RE = /^\[align=(right|center|left)\]\n([\s\S]*)\n\[\/align\]$/;
+const COLOR_RE = /\{color:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/color\}/g;
+const SIZE_RE = /\{size:(\d{1,3})\}([\s\S]*?)\{\/size\}/g;
+const BOLD_RE = /\*\*([^\n]+?)\*\*/g;
+const ITALIC_RE = /\*([^\n*]+?)\*/g;
+const UNDERLINE_RE = /\+\+([^\n]+?)\+\+/g;
 
 function escapeAttr(value: string): string {
   return value.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -101,6 +107,24 @@ function videoEmbedHtml(url: string): string {
 }
 
 /**
+ * Renders the reporter's inline-formatting syntax (inserted by the body
+ * toolbar's bold/italic/underline/color/size buttons — see
+ * components/dashboard/article-form.tsx) into real HTML. Runs on already
+ * HTML-escaped text, so this only ever wraps existing escaped text in a
+ * handful of safe, fixed tags/inline styles — it can't introduce markup of
+ * its own. Colors/sizes are constrained by their regexes (a leading `#` plus
+ * hex digits; 1–3 plain digits) so there's nothing to sanitize further.
+ */
+function applyInlineFormatting(text: string): string {
+  return text
+    .replace(COLOR_RE, (_m, color: string, inner: string) => `<span style="color:${color}">${inner}</span>`)
+    .replace(SIZE_RE, (_m, size: string, inner: string) => `<span style="font-size:${size}px">${inner}</span>`)
+    .replace(BOLD_RE, (_m, inner: string) => `<strong>${inner}</strong>`)
+    .replace(ITALIC_RE, (_m, inner: string) => `<em>${inner}</em>`)
+    .replace(UNDERLINE_RE, (_m, inner: string) => `<u>${inner}</u>`);
+}
+
+/**
  * Converts plain text (as typed into the reporter's/editor's textarea, with
  * blank-line-separated paragraphs) into safe HTML for rendering. Escapes
  * HTML special characters first — article body is real user-submitted
@@ -112,6 +136,13 @@ function videoEmbedHtml(url: string): string {
  * `[video](url)` (inserted by "insert video") renders as an embedded
  * YouTube/Aparat/direct-file player — see components/dashboard/article-form.tsx.
  * Only http(s) and site-relative URLs are allowed.
+ *
+ * A paragraph wrapped in `[align=right|center|left] ... [/align]` (inserted
+ * by the alignment toolbar buttons) renders as that one paragraph with the
+ * matching text-align. Within any paragraph, `**bold**`, `*italic*`,
+ * `++underline++`, `{color:#hex}...{/color}`, and `{size:N}...{/size}`
+ * (inserted by the corresponding toolbar buttons) render as their matching
+ * inline styling.
  */
 export function textToSafeHtml(text: string): string {
   const escaped = text
@@ -133,7 +164,76 @@ export function textToSafeHtml(text: string): string {
       if (videoMatch) {
         return videoEmbedHtml(videoMatch[1]!);
       }
-      return `<p>${paragraph.replace(/\n/g, "<br />")}</p>`;
+      const alignMatch = paragraph.match(ALIGN_BLOCK_RE);
+      if (alignMatch) {
+        const [, align, inner] = alignMatch;
+        const formatted = applyInlineFormatting(inner!).replace(/\n/g, "<br />");
+        return `<p style="text-align:${align}">${formatted}</p>`;
+      }
+      const formatted = applyInlineFormatting(paragraph).replace(/\n/g, "<br />");
+      return `<p>${formatted}</p>`;
     })
     .join("");
+}
+
+/**
+ * Wraps the selected range [start, end) of `text` with `prefix`/`suffix` —
+ * or, if nothing is selected, inserts an empty pair with the cursor left in
+ * between. Used by the body toolbar's bold/italic/underline/color/size
+ * buttons. Returns where the textarea's selection should move to afterward,
+ * so the *original* selected text stays selected (now inside the new
+ * wrapper) and a second formatting click nests correctly instead of
+ * re-selecting the markers themselves.
+ */
+export function wrapSelection(
+  text: string,
+  start: number,
+  end: number,
+  prefix: string,
+  suffix: string
+): { text: string; selectionStart: number; selectionEnd: number } {
+  const before = text.slice(0, start);
+  const selected = text.slice(start, end);
+  const after = text.slice(end);
+  return {
+    text: `${before}${prefix}${selected}${suffix}${after}`,
+    selectionStart: start + prefix.length,
+    selectionEnd: start + prefix.length + selected.length,
+  };
+}
+
+/**
+ * Wraps the paragraph the cursor currently sits in (bounded by blank lines)
+ * with an `[align=...]` block, replacing any alignment already on that same
+ * paragraph rather than nesting. Used by the toolbar's align-right/center/
+ * left buttons. A click with no paragraph under the cursor (blank line) is
+ * a no-op.
+ */
+export function setParagraphAlign(
+  text: string,
+  cursorPos: number,
+  align: "right" | "center" | "left"
+): { text: string; selectionStart: number; selectionEnd: number } {
+  const before = text.slice(0, cursorPos);
+  const after = text.slice(cursorPos);
+  const startBoundaryRel = before.lastIndexOf("\n\n");
+  const endBoundaryRel = after.indexOf("\n\n");
+  const paraStart = startBoundaryRel === -1 ? 0 : startBoundaryRel + 2;
+  const paraEnd = endBoundaryRel === -1 ? text.length : cursorPos + endBoundaryRel;
+
+  let paragraph = text.slice(paraStart, paraEnd);
+  const existing = paragraph.match(ALIGN_BLOCK_RE);
+  if (existing) paragraph = existing[2]!;
+
+  if (!paragraph.trim()) {
+    return { text, selectionStart: cursorPos, selectionEnd: cursorPos };
+  }
+
+  const wrapped = `[align=${align}]\n${paragraph}\n[/align]`;
+  const newCursor = paraStart + wrapped.length;
+  return {
+    text: text.slice(0, paraStart) + wrapped + text.slice(paraEnd),
+    selectionStart: newCursor,
+    selectionEnd: newCursor,
+  };
 }

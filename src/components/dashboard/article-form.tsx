@@ -2,7 +2,22 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Save, Send, AlertTriangle, X, ImagePlus, Film } from "lucide-react";
+import {
+  Sparkles,
+  Save,
+  Send,
+  AlertTriangle,
+  X,
+  ImagePlus,
+  Film,
+  Bold,
+  Italic,
+  Underline,
+  Palette,
+  AlignRight,
+  AlignCenter,
+  AlignLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUpload } from "@/components/shared/file-upload";
 import { CoverImagePositionPicker } from "@/components/dashboard/cover-image-position-picker";
 import { CATEGORIES } from "@/lib/mock-data";
+import { wrapSelection, setParagraphAlign } from "@/lib/utils";
 import {
   suggestTitleAction,
   suggestTagsAction,
@@ -165,6 +181,42 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
       const pos = start + marker.length;
       textarea.setSelectionRange(pos, pos);
     });
+  }
+
+  function applyWrap(prefix: string, suffix: string) {
+    const textarea = bodyRef.current;
+    const start = textarea?.selectionStart ?? body.length;
+    const end = textarea?.selectionEnd ?? body.length;
+    const result = wrapSelection(body, start, end, prefix, suffix);
+    setBody(result.text);
+
+    requestAnimationFrame(() => {
+      if (!textarea) return;
+      textarea.focus();
+      textarea.setSelectionRange(result.selectionStart, result.selectionEnd);
+    });
+  }
+
+  function applyAlign(align: "right" | "center" | "left") {
+    const textarea = bodyRef.current;
+    const cursorPos = textarea?.selectionStart ?? body.length;
+    const result = setParagraphAlign(body, cursorPos, align);
+    setBody(result.text);
+
+    requestAnimationFrame(() => {
+      if (!textarea) return;
+      textarea.focus();
+      textarea.setSelectionRange(result.selectionStart, result.selectionEnd);
+    });
+  }
+
+  function handleColorPick(e: React.ChangeEvent<HTMLInputElement>) {
+    applyWrap(`{color:${e.target.value}}`, "{/color}");
+  }
+
+  function handleSizePick(value: string) {
+    if (!value) return;
+    applyWrap(`{size:${value}}`, "{/size}");
   }
 
   async function handleSave(action: "draft" | "submit") {
@@ -343,9 +395,57 @@ export function ArticleForm({ initialArticle }: { initialArticle?: EditableArtic
                   </Button>
                 </div>
               )}
+              <div className="flex flex-wrap items-center gap-1 rounded-md border border-border bg-muted/40 p-1">
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="بولد" onClick={() => applyWrap("**", "**")}>
+                  <Bold className="h-3.5 w-3.5" />
+                </Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="ایتالیک" onClick={() => applyWrap("*", "*")}>
+                  <Italic className="h-3.5 w-3.5" />
+                </Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="خط زیر" onClick={() => applyWrap("++", "++")}>
+                  <Underline className="h-3.5 w-3.5" />
+                </Button>
+
+                <div className="mx-0.5 h-5 w-px bg-border" />
+
+                <label className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="رنگ متن">
+                  <Palette className="h-3.5 w-3.5" />
+                  <input
+                    type="color"
+                    defaultValue="#c2410c"
+                    onChange={handleColorPick}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  />
+                </label>
+
+                <Select onValueChange={handleSizePick}>
+                  <SelectTrigger className="h-7 w-[4.5rem] text-xs" title="اندازه‌ی فونت">
+                    <SelectValue placeholder="اندازه" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[12, 14, 16, 18, 20, 24, 28, 32].map((s) => (
+                      <SelectItem key={s} value={String(s)}>
+                        {s}px
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div className="mx-0.5 h-5 w-px bg-border" />
+
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="راست‌چین" onClick={() => applyAlign("right")}>
+                  <AlignRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="وسط‌چین" onClick={() => applyAlign("center")}>
+                  <AlignCenter className="h-3.5 w-3.5" />
+                </Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="چپ‌چین" onClick={() => applyAlign("left")}>
+                  <AlignLeft className="h-3.5 w-3.5" />
+                </Button>
+              </div>
               <Textarea ref={bodyRef} id="body" value={body} onChange={(e) => setBody(e.target.value)} rows={12} placeholder="متن کامل خبر…" />
               <p className="text-xs text-muted-foreground">
-                برای درج تصویر یا ویدیو داخل متن، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
+                برای قالب‌بندی، بخشی از متن را انتخاب کنید و روی دکمه‌ی مربوطه بزنید. برای راست‌چین/وسط‌چین/چپ‌چین کافی‌ست مکان‌نما در همان پاراگراف باشد. برای درج تصویر یا ویدیو، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
               </p>
               {duplicateWarning && (
                 <p className="flex items-center gap-1.5 text-xs text-secondary">
