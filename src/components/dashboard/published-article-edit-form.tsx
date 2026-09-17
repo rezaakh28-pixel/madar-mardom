@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Save, ImagePlus, Film, Bold, Italic, Underline, Palette, AlignRight, AlignCenter, AlignLeft } from "lucide-react";
+import { Save, ImagePlus, Film, Bold, Italic, Underline, Check, AlignRight, AlignCenter, AlignLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -138,8 +138,10 @@ export function PublishedArticleEditForm({
     });
   }
 
-  function handleColorPick(e: React.ChangeEvent<HTMLInputElement>) {
-    applyWrap(`{color:${e.target.value}}`, "{/color}");
+  const [pendingColor, setPendingColor] = React.useState("#c2410c");
+
+  function applyPendingColor() {
+    applyWrap(`{color:${pendingColor}}`, "{/color}");
   }
 
   function handleSizePick(value: string) {
@@ -241,15 +243,24 @@ export function PublishedArticleEditForm({
 
           <div className="mx-0.5 h-5 w-px bg-border" />
 
-          <label className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="رنگ متن">
-            <Palette className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1 rounded-md pr-1" title="رنگ متن">
             <input
               type="color"
-              defaultValue="#c2410c"
-              onChange={handleColorPick}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={pendingColor}
+              onChange={(e) => setPendingColor(e.target.value)}
+              className="h-7 w-7 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
             />
-          </label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              title="اعمال این رنگ روی متن انتخاب‌شده"
+              onClick={applyPendingColor}
+            >
+              <Check className="h-3.5 w-3.5" />
+            </Button>
+          </div>
 
           <Select onValueChange={handleSizePick}>
             <SelectTrigger className="h-7 w-[4.5rem] text-xs" title="اندازه‌ی فونت">
@@ -278,7 +289,7 @@ export function PublishedArticleEditForm({
         </div>
         <Textarea ref={bodyRef} id="edit-body" rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
         <p className="text-xs text-muted-foreground">
-          برای قالب‌بندی، بخشی از متن را انتخاب کنید و روی دکمه‌ی مربوطه بزنید. برای راست‌چین/وسط‌چین/چپ‌چین کافی‌ست مکان‌نما در همان پاراگراف باشد. برای درج تصویر یا ویدیو، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
+          برای قالب‌بندی، بخشی از متن را انتخاب کنید و روی دکمه‌ی مربوطه بزنید — برای رنگ، بعد از انتخاب رنگ دلخواه حتماً روی دکمه‌ی تیک بزنید تا اعمال شود. برای راست‌چین/وسط‌چین/چپ‌چین کافی‌ست مکان‌نما در همان پاراگراف باشد. برای درج تصویر یا ویدیو، مکان‌نما را در نقطه‌ی مدنظر بگذارید و روی دکمه‌ی مربوطه بزنید — دقیقاً همان‌جا در صفحه‌ی خبر نمایش داده می‌شود.
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
