@@ -69,7 +69,7 @@ export function ArticleCard({
             aria-hidden
             fill
             sizes="180px"
-            className="scale-125 object-cover opacity-40 blur-xl"
+            className="scale-110 object-cover opacity-60 blur-sm"
             style={{ objectPosition: article.coverImage.objectPosition || "center" }}
           />
         )}
