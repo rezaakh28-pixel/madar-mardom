@@ -46,39 +46,55 @@ export function ArticleCard({
       }`}
     >
       {/*
-        Every image/video slot is a true, fixed 16:9 box — self-start so it
-        never gets stretched (and cropped/distorted) to match a taller
-        sibling; the card grows to fit it instead. Previously the "large"
-        and "horizontal" slots stretched to match their neighboring column
-        or text block, which cropped the image away from its real ratio.
+        Image/video slot. "large" and "vertical" are a simple true 16:9 box.
+        "horizontal" (the small cards) is trickier: the column has to stretch
+        to match a taller wrapped title next to it, but the image itself must
+        stay true 16:9 (undistorted) at the top — which used to leave the
+        rest of the column blank and white. Now that leftover space is
+        filled with a softly blurred, scaled-up copy of the same photo as a
+        backdrop, so it reads as an intentional edge-to-edge panel instead of
+        an empty gap — the real image on top is unchanged in size or position.
       */}
       <div
         className={
           isHorizontal
-            ? "relative aspect-[16/9] w-32 shrink-0 self-start sm:w-44"
+            ? "relative w-32 shrink-0 self-stretch overflow-hidden sm:w-44"
             : "relative aspect-[16/9] w-full"
         }
       >
-        {isPlayableVideo ? (
-          <VideoEmbedFill url={article.videoUrl!} title={article.title} />
-        ) : (
+        {isHorizontal && !isPlayableVideo && (
           <Image
             src={article.coverImage.url}
-            alt={article.coverImage.alt}
+            alt=""
+            aria-hidden
             fill
-            sizes={isHorizontal ? "180px" : isLarge ? "(min-width: 1024px) 40vw, 100vw" : "(min-width: 1024px) 33vw, 100vw"}
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="180px"
+            className="scale-125 object-cover opacity-40 blur-xl"
             style={{ objectPosition: article.coverImage.objectPosition || "center" }}
-            priority={priority}
           />
         )}
-        {isHorizontal && article.videoUrl && (
-          <span className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-navy-900">
-              <Play className="h-3.5 w-3.5 fill-current" />
+        <div className={isHorizontal ? "absolute inset-x-0 top-0 aspect-[16/9] w-full overflow-hidden" : "contents"}>
+          {isPlayableVideo ? (
+            <VideoEmbedFill url={article.videoUrl!} title={article.title} />
+          ) : (
+            <Image
+              src={article.coverImage.url}
+              alt={article.coverImage.alt}
+              fill
+              sizes={isHorizontal ? "180px" : isLarge ? "(min-width: 1024px) 40vw, 100vw" : "(min-width: 1024px) 33vw, 100vw"}
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              style={{ objectPosition: article.coverImage.objectPosition || "center" }}
+              priority={priority}
+            />
+          )}
+          {isHorizontal && article.videoUrl && (
+            <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-navy-900">
+                <Play className="h-3.5 w-3.5 fill-current" />
+              </span>
             </span>
-          </span>
-        )}
+          )}
+        </div>
         {/* Video players sit on top of the card and would swallow clicks meant for badges/navigation, so keep badges out of their way by not layering them over a live player. */}
         {!isPlayableVideo && (
           <div className="absolute right-2 top-2 flex flex-wrap items-center gap-1.5">
