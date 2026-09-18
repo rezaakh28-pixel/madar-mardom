@@ -33,15 +33,18 @@ export function TopBar() {
 
   return (
     <div className="bg-primary text-primary-foreground">
-      <div className="container-page relative flex h-9 items-center justify-between gap-2">
+      <div className="container-page relative flex h-11 items-center justify-between gap-2">
         <div className="shrink-0">
           <SocialLinksRow compact variant="plain" className="flex items-center gap-3" />
         </div>
 
         {!searchOpen && (
-          <p className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 truncate px-1 text-[11px] font-medium sm:text-xs">
-            {today} <span aria-hidden>·</span> <span dir="ltr">{formatTimeFa(now)}</span>
-          </p>
+          <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 truncate px-1 text-center leading-tight">
+            <span className="text-[9px] font-medium sm:text-[10px]">{today}</span>
+            <span dir="ltr" className="text-[9px] font-medium sm:text-[10px]">
+              {formatTimeFa(now)}
+            </span>
+          </div>
         )}
 
         <div className="flex shrink-0 items-center gap-1">
