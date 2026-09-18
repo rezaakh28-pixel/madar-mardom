@@ -7,15 +7,15 @@ import type { NewsArticle } from "@/types";
 import { timeAgoFa, formatFa } from "@/lib/utils";
 
 /**
- * The single big "تیتر اصلی" headline — a 16:9 cover image on the physical
- * left, and the site's blue (bg-primary, theme-aware) filling the physical
- * right with the title/lead/meta. A gradient at the seam between them
- * blends the photo into the blue instead of a hard edge.
+ * The single big "تیتر اصلی" headline — a true 16:9 cover image on the
+ * physical left, and the site's blue (bg-primary, theme-aware) filling the
+ * physical right with the title/lead/meta. A gradient at the seam between
+ * them blends the photo into the blue instead of a hard edge.
  *
- * On sm+ the image fills the row's full height (matching the text panel)
- * instead of a strict aspect-ratio box, so there's never blank space under
- * a shorter image — the 16:9 ratio applies on mobile, where it's stacked
- * on its own with nothing to match.
+ * The image is always a real 16:9 box (self-start, so CSS Grid's default
+ * row-stretch can't distort it to match the text panel) — if the text panel
+ * ever needs more height than that (rare: title/lead are both line-clamped),
+ * the row simply grows to fit it rather than stretching/cropping the image.
  *
  * DOM order: text panel first, then image — on this RTL site the first grid
  * item sits physically on the right by default, so no extra ordering is
@@ -53,8 +53,8 @@ export function HeroHeadline({ article }: { article: NewsArticle }) {
         </div>
       </div>
 
-      {/* Image/video — 16:9 on mobile (stacked); on sm+ fills the row's full height so it always matches the text panel with no gap underneath. */}
-      <div className="relative order-1 aspect-[16/9] w-full overflow-hidden sm:order-2 sm:aspect-auto sm:h-full">
+      {/* Image/video — always a true 16:9 box, physically on the left on sm+. */}
+      <div className="relative order-1 aspect-[16/9] w-full self-start overflow-hidden sm:order-2">
         {isPlayableVideo ? (
           <VideoEmbedFill url={article.videoUrl!} title={article.title} />
         ) : (

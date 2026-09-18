@@ -25,8 +25,7 @@ export function ArticleCard({
   article: NewsArticle;
   /**
    * "large" is the featured/latest-in-category card used in NewsSection's
-   * 1-big + 2-small layout: same shape as "vertical" but stretches to fill
-   * the height of the two stacked small cards beside it.
+   * 1-big + 2-small layout, next to the two small stacked cards.
    */
   orientation?: "vertical" | "horizontal" | "large";
   priority?: boolean;
@@ -42,17 +41,22 @@ export function ArticleCard({
   return (
     <Link
       href={`/news/${article.slug}`}
-      className={`group flex h-full overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-md ${
-        isHorizontal ? "flex-row items-stretch gap-4" : "flex-col"
+      className={`group flex overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-md ${
+        isHorizontal ? "flex-row items-start gap-4" : "h-full flex-col"
       }`}
     >
+      {/*
+        Every image/video slot is a true, fixed 16:9 box — self-start so it
+        never gets stretched (and cropped/distorted) to match a taller
+        sibling; the card grows to fit it instead. Previously the "large"
+        and "horizontal" slots stretched to match their neighboring column
+        or text block, which cropped the image away from its real ratio.
+      */}
       <div
         className={
           isHorizontal
-            ? "relative w-32 shrink-0 sm:w-44"
-            : isLarge
-              ? "relative w-full flex-1 min-h-[10rem]"
-              : "relative aspect-[16/9] w-full"
+            ? "relative aspect-[16/9] w-32 shrink-0 self-start sm:w-44"
+            : "relative aspect-[16/9] w-full"
         }
       >
         {isPlayableVideo ? (
