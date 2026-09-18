@@ -12,10 +12,10 @@ import { timeAgoFa, formatFa } from "@/lib/utils";
  * physical right with the title/lead/meta. A gradient at the seam between
  * them blends the photo into the blue instead of a hard edge.
  *
- * The image is always a real 16:9 box (self-start, so CSS Grid's default
- * row-stretch can't distort it to match the text panel) — if the text panel
- * ever needs more height than that (rare: title/lead are both line-clamped),
- * the row simply grows to fit it rather than stretching/cropping the image.
+ * Fixed, non-growing box: the image is always a real 16:9 box (self-start,
+ * so CSS Grid's default row-stretch can't distort it to match the text
+ * panel), and the title is clamped to 2 lines at a size chosen to
+ * comfortably fit within that height instead of ever pushing the box taller.
  *
  * DOM order: text panel first, then image — on this RTL site the first grid
  * item sits physically on the right by default, so no extra ordering is
@@ -35,7 +35,7 @@ export function HeroHeadline({ article }: { article: NewsArticle }) {
         <Badge variant="secondary" className="w-fit">
           {article.category.title}
         </Badge>
-        <h1 className="text-balance text-2xl font-extrabold leading-snug sm:text-4xl">
+        <h1 className="line-clamp-2 text-balance text-xl font-extrabold leading-snug sm:text-3xl">
           {article.title}
         </h1>
         <p className="line-clamp-2 text-balance text-sm leading-relaxed opacity-80 sm:text-base">
