@@ -134,16 +134,22 @@ export function ArticleCard({
             {article.title}
           </h3>
         )}
-        {!isHorizontal && !isLarge && (
-          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{article.lead}</p>
+        {!isHorizontal && (
+          <p
+            className={`text-muted-foreground ${
+              isLarge ? "line-clamp-1 text-xs leading-snug" : "line-clamp-2 text-sm leading-relaxed"
+            }`}
+          >
+            {article.lead}
+          </p>
         )}
-        <div className="mt-auto flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="mt-auto flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span>{KIND_LABEL_FA[article.kind]}</span>
           <span aria-hidden>·</span>
           <span>{timeAgoFa(article.publishedAt)}</span>
           <span aria-hidden>·</span>
           <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-2.5 w-2.5" />
             {formatFa(article.readingMinutes)} دقیقه
           </span>
         </div>
