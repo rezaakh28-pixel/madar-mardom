@@ -33,8 +33,10 @@ export function ArticleCard({
    * fit-text.tsx) to shrink its own font size until it fits within 2 lines,
    * instead of the box stretching to fit it. The two together are sized so
    * the big card always lands exactly as tall as the two small cards
-   * stacked (208px = 2×96 + 16px gap on mobile, 240px = 2×112 + 16px gap on
-   * sm+) — if either number changes, keep this relationship in mind.
+   * stacked (13rem = 2×6rem + 1rem gap on mobile, 15rem = 2×7rem + 1rem gap
+   * on sm+). Every number here is in rem, not px — mixing units would make
+   * that match only hold at one specific root font-size/zoom level instead
+   * of always. If either number changes, keep this relationship in mind.
    */
   orientation?: "vertical" | "horizontal" | "large";
   priority?: boolean;
@@ -54,7 +56,7 @@ export function ArticleCard({
         isHorizontal
           ? "h-24 flex-row items-stretch gap-3 sm:h-28"
           : isLarge
-            ? "h-[208px] flex-col sm:h-[240px]"
+            ? "h-[13rem] flex-col sm:h-[15rem]"
             : "h-full flex-col"
       }`}
     >
