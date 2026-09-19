@@ -26,6 +26,7 @@ export function FitText({
   maxFontSize,
   minFontSize = 10,
   className,
+  onFontSizeChange,
   children,
 }: {
   as?: React.ElementType;
@@ -33,10 +34,14 @@ export function FitText({
   maxFontSize: number;
   minFontSize?: number;
   className?: string;
+  /** Called with the resolved font size (px) every time it's (re)computed — lets a sibling (e.g. a lead paragraph) size itself relative to this element. */
+  onFontSizeChange?: (size: number) => void;
   children: React.ReactNode;
 }) {
   const ref = React.useRef<HTMLElement>(null);
   const [fontSize, setFontSize] = React.useState(maxFontSize);
+  const onFontSizeChangeRef = React.useRef(onFontSizeChange);
+  onFontSizeChangeRef.current = onFontSizeChange;
 
   const measure = React.useCallback(() => {
     const el = ref.current;
@@ -51,6 +56,7 @@ export function FitText({
       el.style.fontSize = `${size}px`;
     }
     setFontSize(size);
+    onFontSizeChangeRef.current?.(size);
   }, [maxFontSize, minFontSize]);
 
   React.useLayoutEffect(() => {

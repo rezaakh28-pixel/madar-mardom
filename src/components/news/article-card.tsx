@@ -4,6 +4,7 @@ import { Clock, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { VideoEmbedFill } from "@/components/news/video-embed";
 import { FitText } from "@/components/shared/fit-text";
+import { TitleLeadFit } from "@/components/shared/title-lead-fit";
 import type { NewsArticle } from "@/types";
 import { timeAgoFa, formatFa } from "@/lib/utils";
 
@@ -120,28 +121,31 @@ export function ArticleCard({
             {article.title}
           </FitText>
         ) : isLarge ? (
-          <FitText
-            as="h3"
-            maxLines={2}
-            maxFontSize={16}
-            minFontSize={11}
-            className="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
-          >
-            {article.title}
-          </FitText>
+          <TitleLeadFit
+            title={article.title}
+            lead={article.lead}
+            titleMaxLines={2}
+            titleMaxFontSize={16}
+            titleMinFontSize={11}
+            titleClassName="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
+            leadMaxLines={1}
+            leadOffset={3}
+            leadMinFontSize={9}
+            leadClassName="leading-snug text-muted-foreground"
+          />
         ) : (
-          <h3 className="line-clamp-2 text-balance font-bold leading-snug text-foreground group-hover:text-primary">
-            {article.title}
-          </h3>
-        )}
-        {!isHorizontal && (
-          <p
-            className={`text-muted-foreground ${
-              isLarge ? "line-clamp-1 text-xs leading-snug" : "line-clamp-2 text-sm leading-relaxed"
-            }`}
-          >
-            {article.lead}
-          </p>
+          <TitleLeadFit
+            title={article.title}
+            lead={article.lead}
+            titleMaxLines={2}
+            titleMaxFontSize={18}
+            titleMinFontSize={13}
+            titleClassName="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
+            leadMaxLines={2}
+            leadOffset={4}
+            leadMinFontSize={11}
+            leadClassName="leading-relaxed text-muted-foreground"
+          />
         )}
         <div className="mt-auto flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span>{KIND_LABEL_FA[article.kind]}</span>

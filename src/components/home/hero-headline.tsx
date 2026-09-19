@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { VideoEmbedFill } from "@/components/news/video-embed";
-import { FitText } from "@/components/shared/fit-text";
+import { TitleLeadFit } from "@/components/shared/title-lead-fit";
 import type { NewsArticle } from "@/types";
 import { timeAgoFa, formatFa } from "@/lib/utils";
 
@@ -15,9 +15,10 @@ import { timeAgoFa, formatFa } from "@/lib/utils";
  *
  * Fixed, non-growing box: the image is always a real 16:9 box (self-start,
  * so CSS Grid's default row-stretch can't distort it to match the text
- * panel), and the title uses FitText (components/shared/fit-text.tsx) to
- * shrink its own font size until it fits within 2 lines, instead of ever
- * pushing the box taller or getting cut off.
+ * panel), and the title/lead use TitleLeadFit (components/shared/title-lead-
+ * fit.tsx) to shrink to fit within 2 lines each — the lead's size always
+ * trails the title's resolved size — instead of ever pushing the box taller
+ * or getting cut off.
  *
  * DOM order: text panel first, then image — on this RTL site the first grid
  * item sits physically on the right by default, so no extra ordering is
@@ -37,18 +38,19 @@ export function HeroHeadline({ article }: { article: NewsArticle }) {
         <Badge variant="secondary" className="w-fit">
           {article.category.title}
         </Badge>
-        <FitText
-          as="h1"
-          maxLines={2}
-          maxFontSize={30}
-          minFontSize={18}
-          className="text-balance font-extrabold leading-snug"
-        >
-          {article.title}
-        </FitText>
-        <p className="line-clamp-2 text-balance text-sm leading-relaxed opacity-80 sm:text-base">
-          {article.lead}
-        </p>
+        <TitleLeadFit
+          title={article.title}
+          lead={article.lead}
+          titleAs="h1"
+          titleMaxLines={2}
+          titleMaxFontSize={30}
+          titleMinFontSize={18}
+          titleClassName="text-balance font-extrabold leading-snug"
+          leadMaxLines={2}
+          leadOffset={12}
+          leadMinFontSize={13}
+          leadClassName="text-balance leading-relaxed opacity-80"
+        />
         <div className="flex items-center gap-3 text-xs opacity-70">
           <span>{article.author.name}</span>
           <span aria-hidden>·</span>
