@@ -10,6 +10,15 @@ import * as React from "react";
  * fixed, non-growing size (see ArticleCard's "large"/"horizontal" cards and
  * HeroHeadline) so a long title shrinks to fit instead of the box growing,
  * getting cropped, or silently rendering blank.
+ *
+ * Measures itself again once the site's webfont (Vazirmatn, loaded via
+ * next/font — see src/app/layout.tsx) is confirmed loaded, and on viewport
+ * resize. Without this, the very first measurement can run against the
+ * fallback system font's metrics (whichever font that is varies by device/
+ * OS) before Vazirmatn swaps in — on a slow connection that measurement
+ * locks in before the real font arrives, and Persian glyphs are wide/narrow
+ * enough versus common fallbacks that the result visibly differs machine to
+ * machine. Re-measuring once fonts.ready resolves fixes that.
  */
 export function FitText({
   as: Tag = "span",
@@ -29,7 +38,7 @@ export function FitText({
   const ref = React.useRef<HTMLElement>(null);
   const [fontSize, setFontSize] = React.useState(maxFontSize);
 
-  React.useLayoutEffect(() => {
+  const measure = React.useCallback(() => {
     const el = ref.current;
     if (!el) return;
 
@@ -42,7 +51,24 @@ export function FitText({
       el.style.fontSize = `${size}px`;
     }
     setFontSize(size);
-  }, [children, maxFontSize, minFontSize, maxLines]);
+  }, [maxFontSize, minFontSize]);
+
+  React.useLayoutEffect(() => {
+    measure();
+
+    // Re-measure once the real webfont is loaded (see comment above), and
+    // again if the viewport is resized (available width changes what fits).
+    let cancelled = false;
+    document.fonts?.ready.then(() => {
+      if (!cancelled) measure();
+    });
+
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("resize", measure);
+    };
+  }, [measure, children, maxLines]);
 
   return (
     <Tag
