@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Clock, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { VideoEmbedFill } from "@/components/news/video-embed";
+import { FitText } from "@/components/shared/fit-text";
 import type { NewsArticle } from "@/types";
 import { timeAgoFa, formatFa } from "@/lib/utils";
 
@@ -28,11 +29,12 @@ export function ArticleCard({
    * 1-big + 2-small layout, next to the two small stacked cards.
    *
    * "large" and "horizontal" are both fixed-height, non-growing boxes (see
-   * the height numbers below) — the title is clamped to 2 lines at a
-   * smaller size instead of the box stretching to fit it. The two together
-   * are sized so the big card always lands exactly as tall as the two small
-   * cards stacked (208px = 2×96 + 16px gap on mobile, 240px = 2×112 + 16px
-   * gap on sm+) — if either number changes, keep this relationship in mind.
+   * the height numbers below) — the title uses FitText (components/shared/
+   * fit-text.tsx) to shrink its own font size until it fits within 2 lines,
+   * instead of the box stretching to fit it. The two together are sized so
+   * the big card always lands exactly as tall as the two small cards
+   * stacked (208px = 2×96 + 16px gap on mobile, 240px = 2×112 + 16px gap on
+   * sm+) — if either number changes, keep this relationship in mind.
    */
   orientation?: "vertical" | "horizontal" | "large";
   priority?: boolean;
@@ -105,13 +107,31 @@ export function ArticleCard({
             <Badge variant="secondary">{article.category.title}</Badge>
           </div>
         )}
-        <h3
-          className={`text-balance font-bold leading-snug text-foreground group-hover:text-primary ${
-            isHorizontal ? "line-clamp-2 text-xs sm:text-sm" : isLarge ? "line-clamp-2 text-sm sm:text-base" : "line-clamp-2"
-          }`}
-        >
-          {article.title}
-        </h3>
+        {isHorizontal ? (
+          <FitText
+            as="h3"
+            maxLines={2}
+            maxFontSize={13}
+            minFontSize={9}
+            className="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
+          >
+            {article.title}
+          </FitText>
+        ) : isLarge ? (
+          <FitText
+            as="h3"
+            maxLines={2}
+            maxFontSize={16}
+            minFontSize={11}
+            className="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
+          >
+            {article.title}
+          </FitText>
+        ) : (
+          <h3 className="line-clamp-2 text-balance font-bold leading-snug text-foreground group-hover:text-primary">
+            {article.title}
+          </h3>
+        )}
         {!isHorizontal && !isLarge && (
           <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{article.lead}</p>
         )}

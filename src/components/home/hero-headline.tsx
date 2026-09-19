@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { VideoEmbedFill } from "@/components/news/video-embed";
+import { FitText } from "@/components/shared/fit-text";
 import type { NewsArticle } from "@/types";
 import { timeAgoFa, formatFa } from "@/lib/utils";
 
@@ -14,8 +15,9 @@ import { timeAgoFa, formatFa } from "@/lib/utils";
  *
  * Fixed, non-growing box: the image is always a real 16:9 box (self-start,
  * so CSS Grid's default row-stretch can't distort it to match the text
- * panel), and the title is clamped to 2 lines at a size chosen to
- * comfortably fit within that height instead of ever pushing the box taller.
+ * panel), and the title uses FitText (components/shared/fit-text.tsx) to
+ * shrink its own font size until it fits within 2 lines, instead of ever
+ * pushing the box taller or getting cut off.
  *
  * DOM order: text panel first, then image — on this RTL site the first grid
  * item sits physically on the right by default, so no extra ordering is
@@ -35,9 +37,15 @@ export function HeroHeadline({ article }: { article: NewsArticle }) {
         <Badge variant="secondary" className="w-fit">
           {article.category.title}
         </Badge>
-        <h1 className="line-clamp-2 text-balance text-xl font-extrabold leading-snug sm:text-3xl">
+        <FitText
+          as="h1"
+          maxLines={2}
+          maxFontSize={30}
+          minFontSize={18}
+          className="text-balance font-extrabold leading-snug"
+        >
           {article.title}
-        </h1>
+        </FitText>
         <p className="line-clamp-2 text-balance text-sm leading-relaxed opacity-80 sm:text-base">
           {article.lead}
         </p>
