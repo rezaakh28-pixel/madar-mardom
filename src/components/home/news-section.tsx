@@ -37,13 +37,13 @@ export function NewsSection({
 
       <div className={`grid grid-cols-1 gap-4 ${small.length > 0 ? "sm:grid-cols-[1fr_2fr]" : ""}`}>
         {small.length > 0 && (
-          <div className="order-2 flex flex-col gap-4 sm:order-1">
+          <div className="order-2 flex flex-col justify-between gap-4 sm:order-1">
             {small.map((article) => (
               <ArticleCard key={article.id} article={article} orientation="horizontal" />
             ))}
           </div>
         )}
-        <div className="order-1 sm:order-2">
+        <div className="order-1 h-full sm:order-2">
           <ArticleCard article={big} orientation="large" />
         </div>
       </div>

@@ -40,7 +40,7 @@ export function PhotoGallery({ images }: { images: MediaAsset[] }) {
             type="button"
             onClick={() => setOpenIndex(i)}
             aria-label={`نمایش بزرگ‌شده تصویر ${i + 1}`}
-            className="group relative aspect-square overflow-hidden rounded-md border border-border"
+            className="group relative aspect-[16/9] overflow-hidden rounded-md border border-border"
           >
             <Image
               src={image.url}

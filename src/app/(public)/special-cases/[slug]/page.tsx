@@ -40,7 +40,7 @@ export default async function SpecialCasePage({ params }: PageProps) {
         ]}
       />
 
-      <div className="relative mb-6 aspect-[21/9] w-full overflow-hidden rounded-xl">
+      <div className="relative mb-6 aspect-[16/9] w-full overflow-hidden rounded-xl">
         <Image
           src={specialCase.coverImage.url}
           alt={specialCase.coverImage.alt}

@@ -29,15 +29,17 @@ export function ArticleCard({
    * "large" is the featured/latest-in-category card used in NewsSection's
    * 1-big + 2-small layout, next to the two small stacked cards.
    *
-   * "large" and "horizontal" are both fixed-height, non-growing boxes (see
-   * the height numbers below) — the title uses FitText (components/shared/
-   * fit-text.tsx) to shrink its own font size until it fits within 2 lines,
-   * instead of the box stretching to fit it. The two together are sized so
-   * the big card always lands exactly as tall as the two small cards
-   * stacked (13rem = 2×6rem + 1rem gap on mobile, 15rem = 2×7rem + 1rem gap
-   * on sm+). Every number here is in rem, not px — mixing units would make
-   * that match only hold at one specific root font-size/zoom level instead
-   * of always. If either number changes, keep this relationship in mind.
+   * Every image/video slot is a true 16:9 box on every device, zoom level
+   * and browser: it's sized only with CSS aspect-ratio from its own width,
+   * never with a fixed height (a fixed height + fluid width is what made
+   * images look stretched/cropped differently per screen). Nothing stretches
+   * an image to match a neighbour — where a neighbour is taller/shorter, the
+   * *text* areas absorb the difference instead.
+   *  - "horizontal": image is 42% of the card width at 16:9, and the card is
+   *    exactly as tall as that image (the text column is h-0/min-h-full so
+   *    it can't make the row taller; FitText shrinks the title to fit).
+   *  - "large": 16:9 image on top, text area fills whatever height the grid
+   *    row gives the card.
    */
   orientation?: "vertical" | "horizontal" | "large";
   priority?: boolean;
@@ -53,21 +55,15 @@ export function ArticleCard({
   return (
     <Link
       href={`/news/${article.slug}`}
-      className={`group flex overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-md ${
-        isHorizontal
-          ? "h-24 flex-row items-stretch gap-3 sm:h-28"
-          : isLarge
-            ? "h-[13rem] flex-col sm:h-[15rem]"
-            : "h-full flex-col"
+      className={`group overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-md ${
+        isHorizontal ? "grid grid-cols-[42%_1fr] items-stretch" : "flex h-full flex-col"
       }`}
     >
       <div
         className={
           isHorizontal
-            ? "relative h-full w-32 shrink-0 overflow-hidden sm:w-44"
-            : isLarge
-              ? "relative h-32 w-full shrink-0 overflow-hidden sm:h-40"
-              : "relative aspect-[16/9] w-full"
+            ? "relative aspect-[16/9] w-full self-start overflow-hidden"
+            : "relative aspect-[16/9] w-full shrink-0 overflow-hidden"
         }
       >
         {isPlayableVideo ? (
@@ -100,8 +96,12 @@ export function ArticleCard({
       </div>
 
       <div
-        className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
-          isHorizontal ? "justify-center gap-1 p-2.5" : isLarge ? "gap-1 p-2.5 sm:p-3" : "gap-2 p-4"
+        className={`flex min-h-0 flex-col overflow-hidden ${
+          isHorizontal
+            ? "h-0 min-h-full min-w-0 justify-center gap-1 p-2"
+            : isLarge
+              ? "flex-1 gap-1 p-2.5 sm:p-3"
+              : "flex-1 gap-2 p-4"
         }`}
       >
         {isPlayableVideo && (
