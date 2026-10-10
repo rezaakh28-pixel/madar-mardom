@@ -58,6 +58,14 @@ function PulseCard({ item }: { item: PulseItem }) {
 }
 
 export function PulseOfSociety({ items }: { items: PulseItem[] }) {
+  // Most recent update across all metrics. Metrics that were never filled in
+  // carry a placeholder epoch date (see getPulseItems), so ignore those.
+  const lastUpdated = items
+    .map((i) => i.updatedAt)
+    .filter((d) => new Date(d).getTime() > 0)
+    .sort()
+    .at(-1);
+
   return (
     <section aria-labelledby="pulse-heading" className="relative overflow-hidden rounded-xl border border-border bg-muted/60 p-5 sm:p-7">
       {/* Signature motif: a slow ECG-style sweep behind the section heading, echoing "نبض" (pulse). */}
@@ -74,7 +82,8 @@ export function PulseOfSociety({ items }: { items: PulseItem[] }) {
         </svg>
       </div>
 
-      <div className="relative mb-5 flex items-center gap-2">
+      <div className="relative mb-5">
+      <div className="flex items-center gap-2">
         <span className="relative flex h-2.5 w-2.5">
           <span className="absolute inline-flex h-full w-full animate-pulse-dot rounded-full bg-secondary" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-secondary" />
@@ -83,6 +92,10 @@ export function PulseOfSociety({ items }: { items: PulseItem[] }) {
           نبض جامعه
         </h2>
         <span className="text-xs text-muted-foreground">شاخص‌های روزمره زندگی مردم</span>
+      </div>
+      {lastUpdated && (
+        <p className="mt-1 text-[11px] text-muted-foreground">آخرین به‌روزرسانی: {timeAgoFa(lastUpdated)}</p>
+      )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
