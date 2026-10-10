@@ -75,7 +75,7 @@ export function ArticleCard({
 
       <div
         className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
-          isSmall ? "gap-1 p-2" : isLarge ? "gap-1 p-2.5 sm:p-3" : "gap-2 p-4"
+          isSmall ? "gap-1 p-2" : isLarge ? "gap-2 p-3 sm:p-4" : "gap-2 p-4"
         }`}
       >
         {isPlayableVideo && badges}
@@ -96,14 +96,14 @@ export function ArticleCard({
           <TitleLeadFit
             title={article.title}
             lead={article.lead}
-            titleMaxLines={2}
-            titleMaxFontSize={16}
-            titleMinFontSize={11}
+            titleMaxLines={3}
+            titleMaxFontSize={24}
+            titleMinFontSize={14}
             titleClassName="shrink-0 text-balance font-bold leading-snug text-foreground group-hover:text-primary"
-            leadMaxLines={1}
-            leadOffset={3}
-            leadMinFontSize={9}
-            leadClassName="leading-snug text-muted-foreground"
+            leadMaxLines={4}
+            leadOffset={6}
+            leadMinFontSize={11}
+            leadClassName="shrink-0 leading-relaxed text-muted-foreground"
           />
         ) : (
           <TitleLeadFit
