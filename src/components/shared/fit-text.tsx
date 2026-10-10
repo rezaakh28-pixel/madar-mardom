@@ -70,9 +70,28 @@ export function FitText({
     });
 
     window.addEventListener("resize", measure);
+
+    // The element's own width can change without a window resize (browser
+    // zoom, scrollbar appearing, layout settling after fonts/images load).
+    // A stale measurement is how a title ends up taller than its box and
+    // bleeding into the lead beneath it, so re-measure on any width change.
+    let lastWidth = ref.current?.clientWidth ?? 0;
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            const w = ref.current?.clientWidth ?? 0;
+            if (w !== lastWidth) {
+              lastWidth = w;
+              measure();
+            }
+          })
+        : null;
+    if (ref.current) observer?.observe(ref.current);
+
     return () => {
       cancelled = true;
       window.removeEventListener("resize", measure);
+      observer?.disconnect();
     };
   }, [measure, children, maxLines]);
 

@@ -95,10 +95,11 @@ export function ArticleCard({
         )}
       </div>
 
+      <div className={isHorizontal ? "relative min-w-0" : "contents"}>
       <div
         className={`flex min-h-0 flex-col overflow-hidden ${
           isHorizontal
-            ? "h-0 min-h-full min-w-0 justify-center gap-1 p-2"
+            ? "absolute inset-0 justify-center gap-1 p-2"
             : isLarge
               ? "flex-1 gap-1 p-2.5 sm:p-3"
               : "flex-1 gap-2 p-4"
@@ -116,7 +117,7 @@ export function ArticleCard({
             maxLines={2}
             maxFontSize={13}
             minFontSize={9}
-            className="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
+            className="shrink-0 text-balance font-bold leading-snug text-foreground group-hover:text-primary"
           >
             {article.title}
           </FitText>
@@ -127,7 +128,7 @@ export function ArticleCard({
             titleMaxLines={2}
             titleMaxFontSize={16}
             titleMinFontSize={11}
-            titleClassName="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
+            titleClassName="shrink-0 text-balance font-bold leading-snug text-foreground group-hover:text-primary"
             leadMaxLines={1}
             leadOffset={3}
             leadMinFontSize={9}
@@ -140,14 +141,14 @@ export function ArticleCard({
             titleMaxLines={2}
             titleMaxFontSize={18}
             titleMinFontSize={13}
-            titleClassName="text-balance font-bold leading-snug text-foreground group-hover:text-primary"
+            titleClassName="shrink-0 text-balance font-bold leading-snug text-foreground group-hover:text-primary"
             leadMaxLines={2}
             leadOffset={4}
             leadMinFontSize={11}
             leadClassName="leading-relaxed text-muted-foreground"
           />
         )}
-        <div className="mt-auto flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <div className="mt-auto flex shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground">
           <span>{KIND_LABEL_FA[article.kind]}</span>
           <span aria-hidden>·</span>
           <span>{timeAgoFa(article.publishedAt)}</span>
@@ -157,6 +158,7 @@ export function ArticleCard({
             {formatFa(article.readingMinutes)} دقیقه
           </span>
         </div>
+      </div>
       </div>
     </Link>
   );

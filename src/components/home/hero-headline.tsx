@@ -45,11 +45,11 @@ export function HeroHeadline({ article }: { article: NewsArticle }) {
           titleMaxLines={2}
           titleMaxFontSize={30}
           titleMinFontSize={18}
-          titleClassName="text-balance font-extrabold leading-snug"
+          titleClassName="shrink-0 text-balance font-extrabold leading-snug"
           leadMaxLines={2}
           leadOffset={12}
           leadMinFontSize={13}
-          leadClassName="text-balance leading-relaxed opacity-80"
+          leadClassName="shrink-0 text-balance leading-relaxed opacity-80"
         />
         <div className="flex items-center gap-3 text-xs opacity-70">
           <span>{article.author.name}</span>
